@@ -8,7 +8,7 @@ A wardrobe app that runs on your own computer. Keep a record of your clothes, sa
 
 - Browse garments by category and use in saved outfits.
 - Keep outfit images and styling notes, and find saved outfits from a garment's detail panel.
-- Move pieces to Ready to Let Go without losing their records, and restore them later.
+- Move pieces to Ready to let go without losing their records, and restore them later.
 - Store garments, outfits and their relationships in SQLite, with local images checked for integrity.
 
 The website is a browser for your wardrobe. Photo preparation, outfit generation and intake happen through your chosen external chat or AI tools and this project's maintenance commands. This version has no web upload button, built-in model API, automatic background removal or one-click outfit generator.
@@ -57,7 +57,7 @@ These commands use macOS/Linux shell syntax. On Windows, set `$env:YIXU_DATA_DIR
 2. Prepare a reviewed intake manifest and run `scripts/intake.mjs`, following the [maintenance guide](docs/MAINTENANCE.md).
 3. Save confirmed looks with `scripts/save-owned-outfit.mjs`. Outfits reference real garment records; reference pictures are not inventory.
 
-Not Used and Used in 1–2 Outfits count saved outfit links, not actual wears. A low count is a reason to review a piece, not a decision to discard it.
+Not in any outfits and In 1–2 outfits count saved outfit links, not actual wears. A low count is a reason to review a piece, not a decision to discard it.
 
 ## Data and privacy
 
@@ -81,6 +81,7 @@ Tests use temporary databases and synthetic images, not your wardrobe. No build 
 - [Architecture and relationships](docs/ARCHITECTURE.md)
 - [Intake, backups and restoration](docs/MAINTENANCE.md)
 - [Demo walkthrough](docs/DEMO.md)
+- [English interface wording and icons](docs/UI-COPY.md)
 
 The optional thumbnail script requires a separately installed `sharp`. Normal browsing and tests do not.
 

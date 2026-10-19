@@ -57,7 +57,7 @@ test('new outfit records do not acquire a workbench route, while historical slot
   const fresh=normalizePreferences({outfits:[{id:'fresh',title:'new',selection:{bottom:'b'}}]}).outfits[0];
   assert.equal(fresh.route,undefined);assert.deepEqual(compactSelection({outer:null,tie:'historic',bag:'bag'}),{tie:'historic',bag:'bag'});
   const html=realOutfits({outfits:[{...outfit,selection:{outer:null,inner:'gone'}}],items:[]});
-  assert.match(html,/gone is not currently in the catalog/);assert.doesNotMatch(html,/Garments null/);
+  assert.match(html,/Item gone is unavailable/);assert.doesNotMatch(html,/Garments null|Item null/);
 });
 test('note writes require the exact previous value before replacing existing content',()=>{
   const update={type:'save-note',record:{...old.saved[0],text:'updated'}};

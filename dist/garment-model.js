@@ -1,13 +1,13 @@
-import {garmentCategories,garmentClassification,garmentSlots} from './data/garment-taxonomy.js';
+import {categoryLabel,garmentClassification,garmentSlots} from './data/garment-taxonomy.js';
 export {garmentClassification} from './data/garment-taxonomy.js';
 export const layers = [
   { id: 'outer', name: 'Outerwear', hint: 'Start with silhouette and main color', icon: 'coat' },
-  { id: 'inner', name: 'Base Layer', hint: 'Build the neckline and layers', icon: 'shirt' },
+  { id: 'inner', name: 'Tops', hint: 'Choose a top and build your layers', icon: 'shirt' },
   { id: 'bottom', name: 'Bottoms', hint: 'Balance proportions with the trouser shape', icon: 'pants' },
   { id: 'shoes', name: 'Shoes', hint: 'Connect the hem and footwear', icon: 'shoe' },
-  { id: 'accessory', name: 'Accessories', hint: 'Add finishing details after the outfit works', icon: 'belt' }
+  { id: 'accessory', name: 'Accessories', hint: 'Add the finishing touches', icon: 'accessories' }
 ];
-export const roleNames={outer:'Outer Layer',middle:'Mid Layer',inner:'Base Layer',bottom:'Bottoms',shoes:'Shoes',belt:'Belt',bag:'Bags',accessory:'Accessories',tie:'Archived Accessory'};
+export const roleNames={outer:'Outerwear',middle:'Midlayer',inner:'Top',bottom:'Bottoms',shoes:'Shoes',belt:'Belt',bag:'Bag',accessory:'Accessories',tie:'Tie'};
 export function fitsSlot(item,slot) {
   return garmentSlots(item).includes(slot);
 }
@@ -24,9 +24,9 @@ export function statistics(items, layer) {
   }
   return { total: selected.length, colors: [...colors.values()].sort((a,b)=>b.count-a.count) };
 }
-export function describeSelection(items,selection={}){return Object.keys(roleNames).map(role=>items.find(i=>i.id===selection[role])).filter(Boolean).map(i=>i.color.name+i.subtype).join(' ＋ ');}
+export function describeSelection(items,selection={}){return Object.keys(roleNames).map(role=>items.find(i=>i.id===selection[role])).filter(Boolean).map(i=>i.color.name+' '+i.subtype).join(' + ');}
 export function garmentGroup(item){
-  const {category}=garmentClassification(item);return {id:category,name:garmentCategories[category]};
+  const {category}=garmentClassification(item);return {id:category,name:categoryLabel(category,true)};
 }
 export function canonicalGarmentGroup(id){
   if(['long-tee','short-tee'].includes(id))return 'tee';

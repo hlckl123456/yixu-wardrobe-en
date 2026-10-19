@@ -1,8 +1,9 @@
 import {seasonOrder} from './data/season-policy.js';
+import {seasonLabel,styleLabel} from './ui-copy.js';
 
 // Owned looks are independent of reference membership; no title-based classification.
-export const outfitSeasons=seasonOrder.map(id=>({id,name:({winter:'Winter',autumn:'Fall / Winter',transition:'Spring / Fall',summer:'Summer'})[id]}));
-export const outfitStyles=[{id:'minimal',name:'Clean & Minimal'},{id:'relaxed',name:'Relaxed Casual'},{id:'street',name:'Streetwear Layers'}];
+export const outfitSeasons=seasonOrder.map(id=>({id,name:seasonLabel(id)}));
+export const outfitStyles=['minimal','relaxed','street'].map(id=>({id,name:styleLabel(id)}));
 export const outfitSeasonName=id=>outfitSeasons.find(s=>s.id===id)?.name||'Uncategorized';
 export const outfitStyleNames=outfit=>(outfit.styleTags||[]).map(id=>outfitStyles.find(s=>s.id===id)?.name).filter(Boolean);
 export const outfitTitle=outfit=>outfit.displayTitle||outfit.title;

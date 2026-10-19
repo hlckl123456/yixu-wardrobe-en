@@ -1,19 +1,24 @@
 // Category is a garment construction; collar and sleeve are independent facets.
 // Legacy Chinese subtypes are mapped exactly here, never parsed with regexes.
 export const garmentCategories=Object.fromEntries([
-  ['cardigan','Knit Cardigan'],['shirt-jacket','Overshirt'],['denim-jacket','Denim Jacket'],['fleece','Fleece Jacket'],
-  ['shirt','Shirt'],['knit','Knitwear'],['sweatshirt','Sweatshirt'],['tee','Tee'],['vest','Knit Vest'],['polo','Polo Shirt'],
-  ['jeans','Jeans'],['trousers','Casual Trousers'],['joggers','Track Pants'],['shorts','Shorts'],
-  ['blazer','Blazer'],['jacket','Jacket'],['coat','Coat'],['padded-jacket','Quilted / Padded Jacket'],['outer-vest','Outer Vest'],
-  ['leather-jacket','Leather Jacket'],['cargo-trousers','Cargo Pants'],['henley','Henley Top'],
-  ['lace-shoes','Lace-up Shoes'],['backless-shoes','Mules'],['derby-shoes','Derby Shoes'],['canvas-shoes','Canvas Shoes'],['sneakers','Sneakers'],['glasses','Glasses'],['belt','Belt'],['bag','Bags'],['necklace','Necklace'],['scarf','Scarf / Silk Scarf'],['tie','Archived Tie'],['unknown','Uncategorized']
+  ['cardigan','Cardigan'],['shirt-jacket','Overshirt'],['denim-jacket','Denim jacket'],['fleece','Fleece jacket'],
+  ['shirt','Shirt'],['knit','Knitwear'],['sweatshirt','Sweatshirt'],['tee','T-shirt'],['vest','Sweater vest'],['polo','Polo shirt'],
+  ['jeans','Jeans'],['trousers','Trousers'],['joggers','Track pants'],['shorts','Shorts'],
+  ['blazer','Blazer'],['jacket','Jacket'],['coat','Coat'],['padded-jacket','Padded jacket'],['outer-vest','Outerwear vest'],
+  ['leather-jacket','Leather jacket'],['cargo-trousers','Cargo pants'],['henley','Henley top'],
+  ['lace-shoes','Lace-up shoes'],['backless-shoes','Mules'],['derby-shoes','Derby shoes'],['canvas-shoes','Canvas shoes'],['sneakers','Sneakers'],['glasses','Glasses'],['belt','Belt'],['bag','Bag'],['necklace','Necklace'],['scarf','Scarf'],['tie','Tie'],['unknown','Uncategorized']
 ]);
+const pluralCategories=new Set(['knit','jeans','trousers','joggers','shorts','cargo-trousers','lace-shoes','backless-shoes','derby-shoes','canvas-shoes','sneakers','glasses','unknown']);
+export function categoryLabel(id,plural=false){
+  const name=garmentCategories[id]||'Uncategorized';
+  return !plural||pluralCategories.has(id)?name:id==='scarf'?'Scarves':name+'s';
+}
 export const garmentFacets={
-  neckline:{unknown:'Unconfirmed',crew:'Crewneck',turtleneck:'Turtleneck',stand:'Stand Collar',turn:'Turn-down Collar',hood:'Hooded',v:'V-neck',polo:'Polo Collar',henley:'Henley'},
-  sleeve:{unknown:'Unconfirmed',long:'Long Sleeves',short:'Short Sleeves',sleeveless:'Sleeveless'},
-  closure:{unknown:'Unconfirmed',pullover:'Pullover',zip:'Zip',open:'Open Front',halfzip:'Half Zip'},
-  silhouette:{unknown:'Unconfirmed',wide:'Wide Leg',straight:'Straight Leg'},
-  length:{unknown:'Unconfirmed',short:'Cropped'}
+  neckline:{unknown:'Not confirmed',crew:'Crewneck',turtleneck:'Turtleneck',stand:'Stand collar',turn:'Fold-down collar',hood:'Hooded',v:'V-neck',polo:'Polo collar',henley:'Henley'},
+  sleeve:{unknown:'Not confirmed',long:'Long sleeves',short:'Short sleeves',sleeveless:'Sleeveless'},
+  closure:{unknown:'Not confirmed',pullover:'Pullover',zip:'Zipper',open:'Open front',halfzip:'Half zip'},
+  silhouette:{unknown:'Not confirmed',wide:'Wide leg',straight:'Straight leg'},
+  length:{unknown:'Not confirmed',short:'Cropped'}
 };
 const definitions=[
   ['cardigan','unknown','unknown','open',['Knit Cardigan','Short-sleeve Cardigan']],
@@ -50,6 +55,12 @@ for(const subtype of ['Wide-leg Jeans','Wide-leg Casual Trousers','Wide-leg Trou
 for(const subtype of ['Straight-leg Jeans','Straight-leg Trousers'])legacyGarmentTypes[subtype].silhouette='straight';
 legacyGarmentTypes['Short-sleeve Cardigan'].sleeve='short';
 for(const subtype of ['Half-zip Knit','Half-zip Sweatshirt'])legacyGarmentTypes[subtype].closure='halfzip';
+// Format known type labels without changing stored subtypes or free-text names.
+export function subtypeLabel(value){
+  if(!Object.hasOwn(legacyGarmentTypes,value))return value||'Not confirmed';
+  const label=value==='Crewneck KnitVest'?'Crewneck knit vest':value.charAt(0)+value.slice(1).toLowerCase();
+  return label.replace(/\btee\b/g,'T-shirt');
+}
 export function validateClassification(value){
   if(!value||typeof value!=='object'||Array.isArray(value)||!Object.hasOwn(garmentCategories,value.category))throw Error('Invalid garment category ID');
   const result={category:value.category};
@@ -103,7 +114,7 @@ export function matchGarmentType(item,types){
     const pending=[];let mismatch=false;
     for(const [key,expected] of Object.entries(type)){
       if(expected==='unknown')continue;
-      if(c[key]==='unknown')pending.push(key==='category'?'Type unconfirmed':({neckline:'Neckline',sleeve:'Sleeve Length',closure:'Closure',silhouette:'Trouser Shape',length:'Length'})[key]+'Unconfirmed');
+      if(c[key]==='unknown')pending.push((key==='category'?'Item type':({neckline:'Neckline',sleeve:'Sleeve length',closure:'Closure',silhouette:'Leg shape',length:'Length'})[key])+' not confirmed');
       else if(c[key]!==expected)mismatch=true;
     }
     if(!mismatch&&!pending.length)return {state:'matched',pending:[]};

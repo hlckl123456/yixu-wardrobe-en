@@ -6,18 +6,18 @@ import {canLayerOver,layerOrder} from './layering-limits.js';
 // Explicit editorial tags, never image guesses or assumptions about fabric/warmth.
 export function matchingRules(formula){
   const rules=formula.requirements.map(r=>({...r,slot:r.slot||r.layer}));
-  if(!rules.some(r=>(r.slot||r.layer)==='shoes'))rules.push({slot:'shoes',layer:'shoes',label:'Footwear unspecified · Choose for the hem and occasion',optional:true,unrestricted:true});
+  if(!rules.some(r=>(r.slot||r.layer)==='shoes'))rules.push({slot:'shoes',layer:'shoes',label:'Shoes — choose a pair to suit the outfit',optional:true,unrestricted:true});
   return rules;
 }
 function classify(item,rule){
   const pending=[],mismatch=[];
   if(rule.families){
-    if(!item.color?.family||item.color.family==='unknown')pending.push('Color family unconfirmed');
+    if(!item.color?.family||item.color.family==='unknown')pending.push('Color group not confirmed');
     else if(!rule.families.includes(item.color.family))mismatch.push('Color family mismatch');
   }
   const pattern=item.pattern;
   if(rule.pattern==='solid'){
-    if(!pattern||/Unknown|Unconfirmed|Unclear/.test(pattern))pending.push('Solid pattern unconfirmed');
+    if(!pattern||/Unknown|Unconfirmed|Unclear/.test(pattern))pending.push('Solid color not confirmed');
     else if(pattern!=='Solid')mismatch.push('Not solid-colored');
   }
   if(rule.patternTag){
@@ -27,7 +27,7 @@ function classify(item,rule){
     if(!recorded){
       // A plain-colored knit can still have cable texture. Missing texture metadata
       // is uncertainty, never proof that the garment lacks that construction.
-      if(texture||!evidence||/Unknown|Unconfirmed|Unclear/.test(evidence)||!/(Solid|Stripes|Checks|Polka Dots)/.test(evidence))pending.push(`${rule.patternTag}Unconfirmed`);
+      if(texture||!evidence||/Unknown|Unconfirmed|Unclear/.test(evidence)||!/(Solid|Stripes|Checks|Polka Dots)/.test(evidence))pending.push(`${rule.patternTag} not confirmed`);
       else mismatch.push(`Not ${rule.patternTag}`);
     }
   }

@@ -16,7 +16,7 @@ test('public editions isolate default data and retain publication documentation'
   t.after(()=>fs.rmSync(dir,{recursive:true,force:true}));
   const target=path.join(dir,'export');exportSource(target);
   const files=fs.readdirSync(target,{recursive:true});
-  for(const file of ['LICENSE','SECURITY.md','docs/DEMO.md','docs/MAINTENANCE.md','docs/ci-workflow.yml.example','Start Wardrobe.command','Stop Wardrobe.command'])assert(files.includes(file),file);
+  for(const file of ['LICENSE','SECURITY.md','docs/DEMO.md','docs/MAINTENANCE.md','docs/UI-COPY.md','docs/ci-workflow.yml.example','Start Wardrobe.command','Stop Wardrobe.command'])assert(files.includes(file),file);
   for(const file of files)assert.doesNotMatch(file,/^private-data(?:\/|$)|^demo-data(?:\/|$)|^scripts\/(?:english-|localize-english|finalize-english)|\.(?:png|jpe?g|heic|sqlite)(?:-|$)/i);
   assert.match(fs.readFileSync(path.join(target,'README.md'),'utf8'),/https:\/\/github\.com\/hlckl123456\/yixu-wardrobe-zh/);
 });

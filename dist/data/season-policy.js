@@ -1,10 +1,11 @@
+import {seasonLabel} from '../ui-copy.js';
 // Personal browsing taxonomy, not a warmth or temperature prediction.
 export const seasonOrder = ['winter','autumn','transition','summer'];
 export const seasonRules = [
-  ['Winter','A coat or down jacket is the outermost layer, paired with full-length trousers.'],
-  ['Summer','No winter outerwear; short sleeves, or a light shirt with shorts.'],
-  ['Fall / Winter','Neither rule above applies; substantial knitwear, jackets or insulating layers dominate.'],
-  ['Spring / Fall','Other confirmed lightweight long-sleeve looks, including hoodies with shorts.']
+  [seasonLabel('winter'),'A coat or down jacket is the outermost layer, paired with full-length trousers.'],
+  [seasonLabel('summer'),'No winter outerwear; short sleeves, or a light shirt with shorts.'],
+  [seasonLabel('autumn'),'Neither rule above applies; substantial knitwear, jackets or insulating layers dominate.'],
+  [seasonLabel('transition'),'Other confirmed lightweight long-sleeve looks, including hoodies with shorts.']
 ];
 export function classifySeason(traits) {
   if(!traits || !['none','coat','down'].includes(traits.winterShell))throw Error('Winter outer layer must be specified');
@@ -19,4 +20,4 @@ export function classifySeason(traits) {
   if(traits.weight==='substantial')return 'autumn';
   return 'transition';
 }
-export function seasonReason(traits){return seasonRules.find(([name])=>name===({winter:'Winter',summer:'Summer',autumn:'Fall / Winter',transition:'Spring / Fall'})[classifySeason(traits)])[1];}
+export function seasonReason(traits){return seasonRules.find(([name])=>name===seasonLabel(classifySeason(traits)))[1];}

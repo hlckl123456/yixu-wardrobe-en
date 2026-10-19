@@ -2,7 +2,7 @@ import {inventory} from './garment-model.js';
 import {baseRoute} from './app-route.js';
 import {createLocalRepository} from './local-repository.js';
 import {emptyPreferences} from './data-schema.js';
-import {icon,esc} from './views/shared.js';
+import {icon,esc,countLabel,uiNames} from './views/shared.js';
 import {detailDialog,garmentOutfits} from './views/dialogs.js';
 import {outfitsForGarment,garmentUsageCounts} from './outfit-relationships.js';
 import {ownedCloset,pendingDiscardCloset} from './views/owned.js';
@@ -24,9 +24,9 @@ let currentHash=location.hash;
 history.scrollRestoration='manual';
 window.addEventListener('scroll',()=>positions.set(currentHash,scrollY),{passive:true});
 const items=()=>inventory(resources.catalog.state().data||{items:[]});
-const titles={outfits:'My Outfits',closet:'My Wardrobe',formulas:'Style References',analysis:'Wardrobe Overview',discard:'Ready to Let Go'};
-$('#environment-label').textContent='Local wardrobe · This device only';
-$('#environment-label').title='Records are stored locally in SQLite; images are stored on this device.';
+const titles=uiNames;
+$('#environment-label').textContent='Stored locally';
+$('#environment-label').title='Your wardrobe database and images are saved on this computer.';
 document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));
 
 function focusKey(element){
@@ -75,12 +75,14 @@ function render(preserve=false){
   const focus=preserve?focusKey(document.activeElement):null,y=scrollY;
   document.querySelectorAll('[data-season-background]').forEach(el=>seasonBackgroundOpen[el.dataset.seasonBackground]=el.open);
   const r=currentRoute(),q=new URLSearchParams(location.hash.split('?')[1]||'');
-  const title=r.section==='notes'?'Outfit Notes':titles[r.page];
-  document.title=`Yixu · ${title}`;$('#breadcrumb').textContent='My Space / '+title;
+  const title=r.section==='notes'?uiNames.notes:titles[r.page];
+  document.title=`Yixu · ${title}`;$('#breadcrumb').textContent='Yixu / '+title;
   $('#nav-count').textContent=resources.catalog.state().status==='ready'?items().filter(isActiveGarment).length:'—';
   $('#discard-nav-count').textContent=resources.catalog.state().status==='ready'?items().filter(isPendingDiscard).length:'—';
   $('#outfit-nav-count').textContent=personalStatus==='ready'?data.outfits.length:'—';
-  $('#outfit-nav-count').setAttribute('aria-label',personalStatus==='ready'?`Total: ${data.outfits.length} outfits`:'Outfit count unavailable');
+  $('#outfit-nav-count').setAttribute('aria-label',personalStatus==='ready'?countLabel(data.outfits.length,'saved outfit'):'Outfit count unavailable');
+  $('#nav-count').setAttribute('aria-label',resources.catalog.state().status==='ready'?countLabel(items().filter(isActiveGarment).length,'item'):'Item count unavailable');
+  $('#discard-nav-count').setAttribute('aria-label',resources.catalog.state().status==='ready'?countLabel(items().filter(isPendingDiscard).length,'item')+' set aside':'Item count unavailable');
   document.querySelectorAll('[data-route]').forEach(a=>{if(a.dataset.route===(r.section==='notes'?'outfits':r.page))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
   const catalogStatus=resources.catalog.state().status,guidesStatus=resources.guides.state().status;
   const context={items:items(),guides:resources.guides.state().data,catalogStatus,guidesStatus,personalStatus,referenceStatus,resolveReference,outfits:data.outfits,saved:data.saved,dataError:!!readError,outfitId:r.id,
@@ -88,11 +90,11 @@ function render(preserve=false){
     formulaRoute:r,studyFormula:referenceContext(location.hash),seasonBackgroundOpen,
     closetLayer:q.get('layer')||(r.page==='discard'?'all':'outer'),closetGroup:q.get('group')||'all',analysisLayer:q.get('layer')||'outer',
     outfitSeason:q.get('season')||'all',outfitStyle:q.get('style')||'all'};
-  const recovery=readError&&r.page==='outfits'?`<section class="data-recovery" role="alert"><h2>Local Records Unavailable</h2><p>This does not mean your outfits or notes are empty. Your data has not been changed.</p><button class="btn" data-resource-retry="personal">Retry</button><p>${esc(readError.message)}</p></section>`:'';
-  const referenceView=referenceStatus==='ready'?referenceFeature.referenceLibrary:()=>'<div class="intro"><h1>Style References</h1></div>'+dataStatus('references','Style References',referenceStatus)+'<p>You can still browse your wardrobe, saved outfits and notes.</p>';
+  const recovery=readError&&r.page==='outfits'?`<section class="data-recovery" role="alert"><h2>Couldn’t load your outfits</h2><p>Your saved data hasn’t changed. Check that the local server is running, then try again.</p><button type="button" class="btn" data-resource-retry="personal">Try again</button><details><summary>Technical details</summary><p>${esc(readError.message)}</p></details></section>`:'';
+  const referenceView=referenceStatus==='ready'?referenceFeature.referenceLibrary:()=>`<div class="intro"><h1>${uiNames.formulas}</h1></div>`+dataStatus('references',uiNames.formulas,referenceStatus)+'<p>You can still browse your wardrobe, saved outfits and notes.</p>';
   const pages={outfits:realOutfits,closet:ownedCloset,discard:pendingDiscardCloset,formulas:r.section==='notes'?notes:referenceView,analysis};
   const catalogPage=['closet','analysis','discard'].includes(r.page);
-  $('#main').innerHTML=recovery+(catalogPage&&catalogStatus!=='ready'?`<div class="intro"><h1>${title}</h1></div>`+dataStatus('catalog','Garment Records',catalogStatus):pages[r.page](context));
+  $('#main').innerHTML=recovery+(catalogPage&&catalogStatus!=='ready'?`<div class="intro"><h1>${title}</h1></div>`+dataStatus('catalog','Wardrobe items',catalogStatus):pages[r.page](context));
   const filters=$('.subcategory-tabs'),active=filters?.querySelector('[aria-current]');
   if(filters&&active){
     const bounds=filters.getBoundingClientRect(),selected=active.getBoundingClientRect();

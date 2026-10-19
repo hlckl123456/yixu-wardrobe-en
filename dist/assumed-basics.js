@@ -13,4 +13,4 @@ export function validateAssumedBasics(value=[]){
 export function normalizeAssumedBasics(value){
   return validateAssumedBasics(value).map(b=>({kind:b.kind,sleeve:b.sleeve,neckline:b.neckline,color:{name:b.color.name,hex:b.color.hex},maxVisibleBandCm:b.maxVisibleBandCm,exposure:b.exposure,provenance:b.provenance}));
 }
-export const basicName=b=>`${b.color.name}Crewneck${b.sleeve==='long'?'Long Sleeves Tee':'Short Sleeves Tee'}`;
+export const basicName=b=>`${b.color.name} ${b.sleeve==='long'?'long-sleeve':'short-sleeve'} crewneck T-shirt`;

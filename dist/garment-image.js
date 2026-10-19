@@ -5,4 +5,4 @@ export function validateImageEvidence(item){
   if(isReconstructed(item)&&item.provenance?.review?.reconstructionAuthorized!==true)throw Error('AI image reconstruction requires user authorization');
   if(item.userConfirmedDetails!==undefined&&(!Array.isArray(item.userConfirmedDetails)||item.userConfirmedDetails.some(t=>typeof t!=='string'||!t.trim()||t.length>300)))throw Error('Invalid user-confirmed details');
 }
-export const imageNotice='AI redraw based on garment photos, with obscured areas reconstructed. Texture, hardware, seams and proportions may differ from the actual item.';
+export const imageNotice='Prepared with AI from your garment photo. Hidden areas may have been reconstructed. Check color, texture, hardware and proportions against the original item.';
