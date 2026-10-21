@@ -3,6 +3,7 @@ import {legacyOutfitLink,normalizeHistoricalCuration} from './compatibility/pers
 import {outfitSeasons,outfitStyles} from './outfit-model.js';
 import {validCode} from './communication-codes.js';
 import {normalizeAssumedBasics} from './assumed-basics.js';
+import {validateSuggestedPieces} from './reviews/suggested-pieces.js';
 export const selectionSlots = ['outer', 'middle', 'inner', 'tie', 'bottom', 'shoes', 'belt', 'bag', 'accessory'];
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 export const emptyPreferences = () => ({selections: {owned: {}}, outfits: [], saved: []});
@@ -44,7 +45,14 @@ function records(value, kind, repairDuplicates) {
 
 function outfitPresentation(record){
   const result={};
-  if(record.suggestedPieces!==undefined&&(!Array.isArray(record.suggestedPieces)||record.suggestedPieces.length))throw Error('A concept with unowned items cannot be saved as an owned outfit; confirm actual garments first');
+  if(record.outfitKind!==undefined&&!['owned','planned'].includes(record.outfitKind))throw Error('Invalid outfit kind');
+  if(record.outfitKind==='planned'){
+    validateSuggestedPieces(record.suggestedPieces);
+    if(!record.suggestedPieces?.length)throw Error('A planned outfit must describe its unpurchased item');
+    if(record.suggestedPieces.some(p=>record.selection[p.slot]||p.slot==='inner'&&record.assumedBasics?.length))throw Error('An unpurchased item cannot share a slot with an owned item or assumed base layer');
+    result.outfitKind='planned';
+    result.suggestedPieces=JSON.parse(JSON.stringify(record.suggestedPieces));
+  }else if(record.suggestedPieces!==undefined&&(!Array.isArray(record.suggestedPieces)||record.suggestedPieces.length))throw Error('Save a concept with unpurchased items explicitly as a planned outfit');
   if(record.code!==undefined){
     if(!validCode(record.code,'DP'))throw Error('Invalid outfit code');
     result.code=record.code;

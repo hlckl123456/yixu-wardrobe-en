@@ -9,9 +9,11 @@ Keep display wording separate from SQLite keys, garment codes and canonical cate
 | My wardrobe | Items the user plans to keep wearing. |
 | Tops | Shirts, T-shirts, sweaters and other tops; not just thermal base layers. |
 | My outfits | Saved combinations of wardrobe items. |
+| Outfit shuffle | Random batches of up to four already saved, illustrated outfits; no new generation. |
+| Wardrobe overview | Charts of active item categories and recorded color families. |
 | Not in any outfits | No links to saved outfits; not a record of actual wears. |
 | Ready to let go | Items set aside, with records retained and restoration possible. |
-| Style inspiration | Ideas to explore, not verified wardrobe inventory. |
+| Planned outfit | A saved concept with labeled unpurchased pieces; they are not wardrobe inventory. |
 
 Use “item” for a general wardrobe record. Use garment-specific words when they help, such as shirt, trousers or shoes. Keep owned items, AI-prepared images and unverified basic layers clearly distinct.
 

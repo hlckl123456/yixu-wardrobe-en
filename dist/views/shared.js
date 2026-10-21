@@ -11,6 +11,7 @@ export const garmentImageBadge=item=>isReconstructed(item)?`<span class="garment
 
 const paths = {
   layout: 'M3 3h7v18H3z M14 3h7v18h-7z M5 6h3 M16 6h3',
+  shuffle: 'M3 7h3c5 0 7 10 12 10h3 M18 14l3 3-3 3 M3 17h3c2 0 4-2 6-5 M14 9c1-1 2-2 4-2h3 M18 4l3 3-3 3',
   hanger: 'M9 6a3 3 0 1 1 3 3v3 M12 12 3 17v3h18v-3z',
   shirt: 'm8 3-5 3-2 5 5 2v8h12v-8l5-2-2-5-5-3c0 4-8 4-8 0',
   coat: 'm8 3-5 3v15h7l2-15 2 15h7V6l-5-3-4 3z',

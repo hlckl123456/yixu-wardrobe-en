@@ -1,143 +1,123 @@
 import {inventory} from './garment-model.js';
-import {baseRoute} from './app-route.js';
+import {workspaceRoute} from './app-route.js';
 import {createLocalRepository} from './local-repository.js';
 import {emptyPreferences} from './data-schema.js';
-import {icon,esc,countLabel,uiNames} from './views/shared.js';
-import {detailDialog,garmentOutfits} from './views/dialogs.js';
-import {outfitsForGarment,garmentUsageCounts} from './outfit-relationships.js';
-import {ownedCloset,pendingDiscardCloset} from './views/owned.js';
-import {isActiveGarment,isPendingDiscard} from './garment-status.js';
-import {realOutfits,ownedImageDialog} from './views/outfits.js';
-import {notes} from './views/notes.js';
-import {analysis} from './views/structure.js';
-import {createJsonResource,validateCatalog,validateGuides} from './resource-repository.js';
+import {esc} from './views/shared.js';
+import {createJsonResource,validateCatalog} from './resource-repository.js';
 import {dataStatus} from './views/data-status.js';
+import {garmentUsageCounts} from './outfit-relationships.js';
+import {createOutfitMixer,mixableOutfits} from './mix-model.js';
+import {outfitListHref,mixListHref} from './outfit-model.js';
+import {savedOutfitsView,mixView,closetView,outfitDetailView,garmentDetailView,outfitZoomView,personalNotesView,refinedMixFilters} from './views/personal.js';
 
 const $=selector=>document.querySelector(selector);
 const storage=(()=>{try{return localStorage;}catch{return null;}})();
-const repository=createLocalRepository(storage);
-let data=emptyPreferences(),readError=null,personalStatus='loading',personalInitialized=false,personalPending=null,pendingRender=false,lightbox=null;
-let referenceFeature=null,referenceStatus='loading';
-const resources={catalog:createJsonResource('data/catalog.json',{validate:validateCatalog}),guides:createJsonResource('data/guides.json',{validate:validateGuides})};
-const seasonBackgroundOpen={},positions=new Map(),dialogTriggers=new WeakMap();
-let currentHash=location.hash;
+const repository=createLocalRepository(storage),catalog=createJsonResource('data/catalog.json',{validate:validateCatalog}),mixer=createOutfitMixer();
+const positions=new Map(),lastRoutes=new Map(),dialogRecords=new WeakMap();
+let data=emptyPreferences(),personalStatus='loading',readError=null,personalInitialized=false,personalPending=null,pendingRender=false;
+let currentHash=location.hash,advance=false,pendingFocus=null;
 history.scrollRestoration='manual';
 window.addEventListener('scroll',()=>positions.set(currentHash,scrollY),{passive:true});
-const items=()=>inventory(resources.catalog.state().data||{items:[]});
-const titles=uiNames;
-$('#environment-label').textContent='Stored locally';
-$('#environment-label').title='Your wardrobe database and images are saved on this computer.';
-document.querySelectorAll('[data-icon]').forEach(el=>el.innerHTML=icon(el.dataset.icon));
-
+const items=()=>inventory(catalog.state().data||{items:[]});
 function focusKey(element){
-  if(!element?.matches('button,a'))return null;
-  for(const attribute of ['data-detail','data-owned-image','data-study-image','data-study-palette','data-study-accessory','href'])if(element.hasAttribute(attribute)){
-    const selector=element.tagName.toLowerCase()+`[${attribute}="${CSS.escape(element.getAttribute(attribute))}"]`;
-    return {selector,index:[...document.querySelectorAll(selector)].indexOf(element)};
-  }
-  return null;
+ if(!element?.matches('button,a,select'))return null;
+ for(const attribute of ['data-filter-key','data-close','data-outfit','data-garment','data-outfit-image','data-related-outfit','data-next','data-filter','data-closet-filter','data-mood','href'])if(element.hasAttribute(attribute)){
+  const selector=element.tagName.toLowerCase()+`[${attribute}="${CSS.escape(element.getAttribute(attribute))}"]`;
+  return {selector,index:[...document.querySelectorAll(selector)].indexOf(element)};
+ }
+ return null;
 }
 function restoreFocus(key){if(key)document.querySelectorAll(key.selector)[key.index]?.focus({preventScroll:true});}
-function openDialog(id,html,trigger){const dialog=$('#'+id);dialogTriggers.set(dialog,{key:focusKey(trigger),hash:location.hash});dialog.innerHTML=html;dialog.showModal();}
-function renderWhenSafe(){if(document.querySelector('dialog[open]'))pendingRender=true;else render(true);}
-function refresh(){
-  if(!personalPending)personalPending=(async()=>{
-    const before=JSON.stringify([data,personalStatus,repository.relationships()]);
-    try{data=await (personalInitialized?repository.read():repository.initialize());personalInitialized=true;readError=null;personalStatus='ready';return true;}
-    catch(error){readError=error;personalStatus='error';return false;}
-    finally{if(before!==JSON.stringify([data,personalStatus,repository.relationships()])){refreshOpenRelationships();renderWhenSafe();}}
-  })().finally(()=>{personalPending=null;});
-  return personalPending;
+function route(){
+ let r=workspaceRoute(location.hash);
+ if(r.redirect){history.replaceState(null,'',r.redirect);currentHash=location.hash;r=workspaceRoute(location.hash);}
+ return {...r,q:new URLSearchParams(location.hash.split('?')[1]||'')};
 }
-function refreshOpenRelationships(){
-  const section=$('#detail[open] [data-garment-outfits]');if(!section)return;
-  const focus=focusKey(document.activeElement),html=garmentOutfits(outfitsForGarment(section.dataset.garmentOutfits,data.outfits,repository.relationships()),personalStatus);
-  if(section.innerHTML!==html){section.innerHTML=html;restoreFocus(focus);}
-}
-async function refreshResource(name){if(await resources[name].refresh())renderWhenSafe();}
-async function loadReferences(){
-  let timer;
-  try{
-    referenceFeature=await Promise.race([import('./reference-feature.js'),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Reference loading timed out')),15000);})]);
-    referenceStatus='ready';
-  }catch{referenceStatus='error';}
-  finally{clearTimeout(timer);renderWhenSafe();}
-}
-function route(hash){const base=baseRoute(hash);return base.page==='formulas'&&base.section!=='notes'&&referenceFeature?referenceFeature.appRoute(hash):base;}
-const referenceContext=hash=>referenceFeature?.referenceContext(hash)||null;
-function resolveReference(hash){const f=referenceContext(hash);return f?referenceFeature.referenceHref(f,f.studyStyle,f.studyVariant.id,f.studyAccessory):null;}
-function currentRoute(){
-  let r=route(location.hash);
-  if(r.redirect){history.replaceState(null,'',r.redirect);currentHash=location.hash;r=route(r.redirect);}
-  return r;
-}
+const titles={outfits:'My outfits',mix:'Outfit shuffle',closet:'My wardrobe',discard:'Ready to let go',notes:'Outfit notes'};
 function render(preserve=false){
-  const focus=preserve?focusKey(document.activeElement):null,y=scrollY;
-  document.querySelectorAll('[data-season-background]').forEach(el=>seasonBackgroundOpen[el.dataset.seasonBackground]=el.open);
-  const r=currentRoute(),q=new URLSearchParams(location.hash.split('?')[1]||'');
-  const title=r.section==='notes'?uiNames.notes:titles[r.page];
-  document.title=`Yixu · ${title}`;$('#breadcrumb').textContent='Yixu / '+title;
-  $('#nav-count').textContent=resources.catalog.state().status==='ready'?items().filter(isActiveGarment).length:'—';
-  $('#discard-nav-count').textContent=resources.catalog.state().status==='ready'?items().filter(isPendingDiscard).length:'—';
-  $('#outfit-nav-count').textContent=personalStatus==='ready'?data.outfits.length:'—';
-  $('#outfit-nav-count').setAttribute('aria-label',personalStatus==='ready'?countLabel(data.outfits.length,'saved outfit'):'Outfit count unavailable');
-  $('#nav-count').setAttribute('aria-label',resources.catalog.state().status==='ready'?countLabel(items().filter(isActiveGarment).length,'item'):'Item count unavailable');
-  $('#discard-nav-count').setAttribute('aria-label',resources.catalog.state().status==='ready'?countLabel(items().filter(isPendingDiscard).length,'item')+' set aside':'Item count unavailable');
-  document.querySelectorAll('[data-route]').forEach(a=>{if(a.dataset.route===(r.section==='notes'?'outfits':r.page))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
-  const catalogStatus=resources.catalog.state().status,guidesStatus=resources.guides.state().status;
-  const context={items:items(),guides:resources.guides.state().data,catalogStatus,guidesStatus,personalStatus,referenceStatus,resolveReference,outfits:data.outfits,saved:data.saved,dataError:!!readError,outfitId:r.id,
-    relationships:repository.relationships(),usageCounts:personalStatus==='ready'?garmentUsageCounts(repository.relationships()):null,closetUsage:q.get('usage')||'all',
-    formulaRoute:r,studyFormula:referenceContext(location.hash),seasonBackgroundOpen,
-    closetLayer:q.get('layer')||(r.page==='discard'?'all':'outer'),closetGroup:q.get('group')||'all',analysisLayer:q.get('layer')||'outer',
-    outfitSeason:q.get('season')||'all',outfitStyle:q.get('style')||'all'};
-  const recovery=readError&&r.page==='outfits'?`<section class="data-recovery" role="alert"><h2>Couldn’t load your outfits</h2><p>Your saved data hasn’t changed. Check that the local server is running, then try again.</p><button type="button" class="btn" data-resource-retry="personal">Try again</button><details><summary>Technical details</summary><p>${esc(readError.message)}</p></details></section>`:'';
-  const referenceView=referenceStatus==='ready'?referenceFeature.referenceLibrary:()=>`<div class="intro"><h1>${uiNames.formulas}</h1></div>`+dataStatus('references',uiNames.formulas,referenceStatus)+'<p>You can still browse your wardrobe, saved outfits and notes.</p>';
-  const pages={outfits:realOutfits,closet:ownedCloset,discard:pendingDiscardCloset,formulas:r.section==='notes'?notes:referenceView,analysis};
-  const catalogPage=['closet','analysis','discard'].includes(r.page);
-  $('#main').innerHTML=recovery+(catalogPage&&catalogStatus!=='ready'?`<div class="intro"><h1>${title}</h1></div>`+dataStatus('catalog','Wardrobe items',catalogStatus):pages[r.page](context));
-  const filters=$('.subcategory-tabs'),active=filters?.querySelector('[aria-current]');
-  if(filters&&active){
-    const bounds=filters.getBoundingClientRect(),selected=active.getBoundingClientRect();
-    if(selected.right>bounds.right)filters.scrollLeft+=selected.right-bounds.right+8;
-    else if(selected.left<bounds.left)filters.scrollLeft-=bounds.left-selected.left+8;
-  }
-  if(preserve){restoreFocus(focus);window.scrollTo(0,y);}
+ const y=scrollY,focus=preserve?focusKey(document.activeElement):null,disclosures=preserve?[...document.querySelectorAll('#main details')].map(d=>d.open):[];
+ const {page,id,q}=route(),catalogStatus=catalog.state().status,season=q.get('season')||'all',style=q.get('style')||'all';
+ if(!id&&['outfits','mix','closet'].includes(page))lastRoutes.set(page,location.hash||'#outfits');
+ document.title='Yixu · '+(page==='closet'&&q.get('view')==='overview'?'Wardrobe overview':titles[page]);
+ document.querySelectorAll('[data-page]').forEach(a=>{a.href=lastRoutes.get(a.dataset.page)||'#'+a.dataset.page;if(a.dataset.page===(page==='discard'?'closet':page==='notes'?'outfits':page))a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
+ $('#notes-footer').hidden=personalStatus!=='ready'||data.saved.length===0;
+ let content;
+ if(['outfits','mix','notes'].includes(page)&&personalStatus!=='ready')content=`<section class="page-heading"><h1>${titles[page]}</h1></section>`+dataStatus('personal',titles[page],personalStatus);
+ else if(['closet','discard','mix'].includes(page)&&catalogStatus!=='ready')content=`<section class="page-heading"><h1>${titles[page]}</h1></section>`+dataStatus('catalog','Wardrobe items',catalogStatus);
+ else if(page==='outfits'&&id){
+  const outfit=data.outfits.find(o=>o.id===id||o.code===id),fromMix=q.get('from')==='mix',back=fromMix?mixListHref({season,style}):outfitListHref({season,style});
+  content=outfit?`<div class="detail-page-heading"><a class="quiet-link" href="${back}">← ${fromMix?'Outfit shuffle':'My outfits'}</a></div><div class="detail-page">${outfitDetailView(outfit,items(),{asPage:true,catalogStatus,relationships:repository.relationships()})}</div>`:'<section class="empty"><h1>Outfit not found</h1><p>Browse your saved outfits instead.</p><a href="#outfits">Back to my outfits</a></section>';
+ }else if(page==='outfits')content=(catalogStatus==='ready'?'':dataStatus('catalog','Wardrobe items',catalogStatus))+savedOutfitsView({outfits:data.outfits,season,style});
+ else if(page==='mix'){
+  const filters=refinedMixFilters(mixableOutfits(data.outfits,items()),{season,style}),batch=mixer.select(filters.visible,{key:filters.season+'|'+filters.style,advance});
+  content=mixView({filters,batch});
+ }else if(page==='notes')content=personalNotesView(data.saved);
+ else content=closetView({items:items(),layer:q.get('layer')||'all',group:q.get('group')||'all',usage:q.get('usage')||'all',usageCounts:personalStatus==='ready'?garmentUsageCounts(repository.relationships()):null,personalStatus,pending:page==='discard',overview:q.get('view')==='overview'});
+ advance=false;
+ $('#main').innerHTML=content;
+ if(readError&&personalStatus==='error')$('#main [data-resource-state]')?.setAttribute('title',readError.message);
+ if(preserve){document.querySelectorAll('#main details').forEach((d,i)=>{if(disclosures[i]!==undefined)d.open=disclosures[i];});restoreFocus(focus);window.scrollTo(0,y);}
+ if(pendingFocus){restoreFocus(pendingFocus);pendingFocus=null;}
 }
-function showLightbox(){const {formula,images,index}=lightbox;$('#formula-image').innerHTML=referenceFeature.formulaImageDialog(formula,images,index);}
-function openImages(formula,images,index,trigger){if(!images.length)return;lightbox={formula,images,index};openDialog('formula-image',referenceFeature.formulaImageDialog(formula,images,index),trigger);}
-function scrollMatches(){$('#owned-matches')?.scrollIntoView({block:'start',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});$('#owned-matches')?.focus({preventScroll:true});}
+function dialogHtml(meta){
+ if(meta.kind==='garment'){
+  const item=items().find(i=>i.id===meta.recordId);
+  return item?garmentDetailView(item,data.outfits,{relationships:repository.relationships(),personalStatus}):'<button class="close" data-close="garment-detail" aria-label="Close item details">×</button><p class="empty">This item is not in the current wardrobe.</p>';
+ }
+ const outfit=data.outfits.find(o=>o.id===meta.recordId);
+ if(!outfit)return `<button class="close" data-close="${meta.kind==='image'?'outfit-image':'outfit-detail'}" aria-label="Close outfit details">×</button><p class="empty">This outfit is not in the current list.</p>`;
+ return meta.kind==='image'?outfitZoomView(outfit):outfitDetailView(outfit,items(),{catalogStatus:catalog.state().status,relationships:repository.relationships()});
+}
+function openDialog(id,kind,recordId,trigger){
+ const dialog=$('#'+id),meta={kind,recordId,trigger:focusKey(trigger),hash:location.hash};
+ dialogRecords.set(dialog,meta);dialog.innerHTML=dialogHtml(meta);dialog.showModal();
+}
+function refreshOpenDialogs(){
+ const focus=focusKey(document.activeElement);
+ for(const dialog of document.querySelectorAll('dialog[open]')){
+  const meta=dialogRecords.get(dialog);if(!meta)continue;
+  const html=dialogHtml(meta);if(dialog.innerHTML!==html){const y=dialog.scrollTop;dialog.innerHTML=html;dialog.scrollTop=y;}
+ }
+ restoreFocus(focus);
+}
+function renderWhenSafe(){refreshOpenDialogs();if(document.querySelector('dialog[open]'))pendingRender=true;else render(true);}
+function refresh(){
+ if(!personalPending)personalPending=(async()=>{
+  const before=JSON.stringify([data,personalStatus,repository.relationships()]);
+  try{data=await(personalInitialized?repository.read():repository.initialize());personalInitialized=true;personalStatus='ready';readError=null;}
+  catch(error){readError=error;personalStatus='error';}
+  finally{if(before!==JSON.stringify([data,personalStatus,repository.relationships()]))renderWhenSafe();}
+ })().finally(()=>{personalPending=null;});
+ return personalPending;
+}
+async function refreshCatalog(){if(await catalog.refresh())renderWhenSafe();}
 document.addEventListener('click',async event=>{
-  if(event.target.closest('a.skip')){event.preventDefault();$('#main').focus();return;}
-  const related=event.target.closest('a[data-related-outfit]');
-  if(related){$('#detail').close();if(related.hash===location.hash)$('#main').focus();return;}
-  const button=event.target.closest('button');if(!button)return;
-  const a=button.dataset;
-  if(a.resourceRetry){if(a.resourceRetry==='references'){location.reload();return;}if(a.resourceRetry==='personal')await refresh();else if(resources[a.resourceRetry])await refreshResource(a.resourceRetry);return;}
-  if(a.close){$('#'+a.close)?.close();return;}
-  if(a.detail){const item=items().find(i=>i.id===a.detail);if(item)openDialog('detail',detailDialog(item,{outfits:outfitsForGarment(item.id,data.outfits,repository.relationships()),status:personalStatus}),button);return;}
-  if(a.ownedImage){const outfit=data.outfits.find(o=>o.id===a.ownedImage);if(outfit?.visual)openDialog('outfit-image',ownedImageDialog(outfit),button);return;}
-  if(button.hasAttribute('data-scroll-matches')){scrollMatches();return;}
-  if(a.studyPalette||a.studyAccessory){
-    const f=referenceContext(location.hash);if(!f)return;
-    const option=referenceFeature.selectReference(f,{style:f.studyStyle.id,accessory:a.studyAccessory||f.studyAccessory});
-    const palette=a.studyPalette||(option.style.variants.some(v=>v.id===f.studyVariant.id)?f.studyVariant.id:undefined);
-    const selected=referenceFeature.selectReference(f,{style:f.studyStyle.id,palette,accessory:option.accessory});
-    history.replaceState(null,'',referenceFeature.referenceHref(f,selected.style,selected.variant.id,selected.accessory));currentHash=location.hash;
-    render();$(`[data-${a.studyPalette?'study-palette':'study-accessory'}="${CSS.escape(a.studyPalette||a.studyAccessory)}"]`)?.focus({preventScroll:true});return;
-  }
-  if(a.studyImage){const f=referenceContext(location.hash);if(f)openImages(f,f.studyStyle.variants,f.studyStyle.variants.indexOf(f.studyVariant),button);return;}
-  if(a.galleryStep&&lightbox){const index=lightbox.index+Number(a.galleryStep);if(index>=0&&index<lightbox.images.length){lightbox.index=index;showLightbox();}return;}
-  if(a.formulaSources&&referenceFeature){openDialog('formula-sources',referenceFeature.formulaSources(),button);return;}
-  if(a.inspectLayer){location.hash='closet?'+new URLSearchParams({layer:a.inspectLayer,group:a.inspectGroup});return;}
-  if(a.analysisLayer){location.hash='analysis?layer='+a.analysisLayer;return;}
+ const skip=event.target.closest('a.skip');if(skip){event.preventDefault();$('#main').focus();return;}
+ const origin=event.target.closest('.origin-note a');if(origin)for(const d of document.querySelectorAll('dialog[open]'))d.close();
+ const filter=event.target.closest('[data-filter-link]');if(filter&&new URL(filter.href).hash!==location.hash)pendingFocus=focusKey(filter);
+ const button=event.target.closest('button');if(!button)return;const a=button.dataset;
+ if(a.resourceRetry){if(a.resourceRetry==='personal')await refresh();else if(a.resourceRetry==='catalog')await refreshCatalog();return;}
+ if(a.close){$('#'+a.close)?.close();return;}
+ if(button.hasAttribute('data-next')){advance=true;render(true);return;}
+ if(a.outfit){openDialog('outfit-detail','outfit',a.outfit,button);return;}
+ if(a.garment){openDialog('garment-detail','garment',a.garment,button);return;}
+ if(a.outfitImage){openDialog('outfit-image','image',a.outfitImage,button);return;}
+ if(a.relatedOutfit){$('#garment-detail').close();if($('#outfit-detail').open)$('#outfit-detail').close();openDialog('outfit-detail','outfit',a.relatedOutfit,button);return;}
 });
-window.addEventListener('hashchange',()=>{currentHash=location.hash;for(const d of document.querySelectorAll('dialog[open]'))d.close();render();window.scrollTo(0,positions.get(currentHash)||0);});
+document.addEventListener('change',event=>{
+ const key=event.target.dataset.filter||event.target.dataset.closetFilter;if(!key)return;
+ const {page,q}=route();if(event.target.value==='all')q.delete(key);else q.set(key,event.target.value);
+ if(key==='season'&&page==='outfits')q.delete('style');
+ location.hash=page+(q.size?'?'+q:'');
+});
+window.addEventListener('hashchange',()=>{
+ currentHash=location.hash;for(const d of document.querySelectorAll('dialog[open]'))d.close();render();
+ window.scrollTo(0,positions.get(currentHash)||0);
+});
 for(const dialog of document.querySelectorAll('dialog'))dialog.addEventListener('close',()=>{
-  if(pendingRender&&!document.querySelector('dialog[open]')){pendingRender=false;render(true);}
-  const trigger=dialogTriggers.get(dialog);if(trigger?.hash===location.hash)restoreFocus(trigger.key);
+ if(pendingRender&&!document.querySelector('dialog[open]')){pendingRender=false;render(true);}
+ const meta=dialogRecords.get(dialog);if(meta?.hash===location.hash)restoreFocus(meta.trigger);
 });
-$('#formula-image').addEventListener('keydown',event=>{if(!lightbox||!['ArrowLeft','ArrowRight'].includes(event.key))return;const index=lightbox.index+(event.key==='ArrowRight'?1:-1);if(index>=0&&index<lightbox.images.length){event.preventDefault();lightbox.index=index;showLightbox();$('#formula-image [data-close]').focus();}});
-function sync(){if(document.hidden)return;void refresh();for(const name of Object.keys(resources))void refreshResource(name);}
+function sync(){if(document.hidden)return;void refresh();void refreshCatalog();}
 window.addEventListener('focus',sync);document.addEventListener('visibilitychange',sync);setInterval(sync,5000);
-render();
-void refresh();for(const name of Object.keys(resources))void refreshResource(name);void loadReferences();
+render();void refresh();void refreshCatalog();

@@ -8,7 +8,7 @@ import {outfitTitle} from '../outfit-model.js';
 export function garmentOutfits(outfits,status='ready'){
   if(status==='loading')return '<h3>Saved outfits</h3><p role="status">Checking outfits for this item…</p>';
   if(status!=='ready'||outfits===null)return '<h3>Saved outfits</h3><p role="status">Couldn’t check which outfits use this item.</p><button type="button" class="text-button" data-resource-retry="personal">Try again</button>';
-  return `<h3>${countLabel(outfits.length,'saved outfit')}</h3><p class="sources">Outfits that include this item, not a count of times worn.</p>${outfits.length?`<div class="related-outfits">${outfits.map(o=>`<a data-related-outfit href="#outfits/${encodeURIComponent(o.id)}" title="${esc(outfitTitle(o))}" aria-label="View outfit ${esc(o.code||o.id)}: ${esc(outfitTitle(o))}">${codeBadge(o)}<span>${esc(outfitTitle(o))}</span></a>`).join('')}</div>`:'<p>This item isn’t in any saved outfits yet.</p>'}`;
+  return `<h3>${countLabel(outfits.length,'saved outfit')}</h3><p class="sources">Outfits that include this item, not a count of times worn. Looks with unpurchased pieces are labeled.</p>${outfits.length?`<div class="related-outfits">${outfits.map(o=>`<a data-related-outfit href="#outfits/${encodeURIComponent(o.id)}" title="${esc(outfitTitle(o))}" aria-label="View outfit ${esc(o.code||o.id)}: ${esc(outfitTitle(o))}">${codeBadge(o)}<span>${esc(outfitTitle(o))}${o.outfitKind==='planned'?' · Includes unpurchased items':''}</span></a>`).join('')}</div>`:'<p>This item isn’t in any saved outfits yet.</p>'}`;
 }
 
 export function detailDialog(item,{outfits=null,status='loading'}={}) {

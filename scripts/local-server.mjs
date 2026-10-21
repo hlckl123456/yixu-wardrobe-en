@@ -21,7 +21,7 @@ const types = {
 
 export function createLocalServer({root = defaultRoot, databasePath=':memory:',dataDir,storeOptions={}} = {}) {
   const realRoot = fs.realpathSync(root);
-  if(databasePath!==':memory:'&&path.resolve(databasePath).startsWith(realRoot+path.sep))throw Error('个人数据库不得位于公开文 items目录');
+  if(databasePath!==':memory:'&&path.resolve(databasePath).startsWith(realRoot+path.sep))throw Error('个人数据库不得位于公开文件目录');
   const mediaRoot=dataDir?path.join(dataDir,'public'):undefined;
   const store=createRelationalStore(databasePath,{...storeOptions,mediaRoot:mediaRoot||storeOptions.mediaRoot});
   const server = http.createServer(async (request, response) => {
@@ -60,7 +60,7 @@ export function createLocalServer({root = defaultRoot, databasePath=':memory:',d
         const payload=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');
         // Reference failures cannot block server startup, reads, notes or recovery.
         let resolveReference;
-        if(pathname.endsWith('/command')&&payload.command?.type==='upsert-owned-outfit'&&payload.command.record?.sourceReference){
+        if(pathname.endsWith('/command')&&['upsert-owned-outfit','upsert-planned-outfit'].includes(payload.command?.type)&&payload.command.record?.sourceReference){
           const {referenceContext}=await import('../dist/navigation-model.js');
           resolveReference=hash=>referenceContext(hash,store.document('reference-catalog')||emptyReferences);
         }
@@ -90,6 +90,12 @@ export function createLocalServer({root = defaultRoot, databasePath=':memory:',d
     // files are reachable; database, archives, prompts and preferences are not.
     const asset=store.asset(pathname);
     if(asset&&mediaRoot){
+      if(asset.kind==='retired')return finish(410,'Removed from this wardrobe');
+      if(asset.kind.startsWith('redirect:')){
+        const target=asset.kind.slice('redirect:'.length),destination=store.asset(target);
+        if(!destination||destination.kind==='retired'||destination.kind.startsWith('redirect:'))return finish(410,'Review no longer available');
+        response.setHeader('Location','/'+target);return finish(307);
+      }
       try{
         const file=containedFile(mediaRoot,asset.relative_path),real=await fs.promises.realpath(file);
         if(!real.startsWith(fs.realpathSync(mediaRoot)+path.sep))return finish(404,'Not found');
@@ -135,10 +141,10 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (!Number.isInteger(port) || port < 1024 || port > 65535) throw Error('Invalid local port');
   const dataDir=dataDirectory();
   if(port!==localPort&&!process.env.YIXU_DATA_DIR)throw Error('QA 端口必须指定隔离的 YIXU_DATA_DIR');
-  if(!fs.existsSync(databaseFile(dataDir))&&fs.existsSync(path.join(projectRoot,'.local-data/owner/wardrobe.sqlite')))throw Error('检测到旧私人数据库, 请先完成显式迁移; 未创建空库冒充原衣橱');
+  if(!fs.existsSync(databaseFile(dataDir))&&fs.existsSync(path.join(projectRoot,'.local-data/owner/wardrobe.sqlite')))throw Error('检测到旧私人数据库，请先完成显式迁移；未创建空库冒充原衣橱');
   const server = createLocalServer({databasePath:databaseFile(dataDir),dataDir});
-  server.on('error',error => {console.error('Unable to start the local wardrobe: '+error.message); process.exitCode = 1;});
-  server.listen(port,'127.0.0.1',() => console.log(`English wardrobe: http://127.0.0.1:${port}/#outfits`));
+  server.on('error',error => {console.error('本地衣橱未启动：'+error.message); process.exitCode = 1;});
+  server.listen(port,'127.0.0.1',() => console.log(`本地衣橱：http://127.0.0.1:${port}/#outfits`));
   for (const signal of ['SIGINT','SIGTERM']) process.on(signal,() => {
     server.close(() => process.exit(0));
     server.closeIdleConnections?.();

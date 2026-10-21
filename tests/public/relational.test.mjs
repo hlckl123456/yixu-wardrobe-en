@@ -30,6 +30,14 @@ test('normalized memberships and codes survive restart without dual JSON selecti
   const db=new DatabaseSync(file,{readOnly:true});try{assert.equal(db.prepare('SELECT count(*) n FROM outfit_items').get().n,2);assert.equal(JSON.parse(db.prepare('SELECT data FROM outfits').get().data).selection,undefined);}finally{db.close();}
   assert.equal(store.read().data.outfits[0].code,'DP01');assert.equal(store.integrity(),'ok');assert.deepEqual(store.foreignKeys(),[]);
 });
+test('editing an outfit season or note preserves its position and unrelated rows',t=>{
+  const {store}=fixture(t);for(const id of ['first','middle','last'])run(store,{type:'upsert-owned-outfit',record:look(id)});
+  const before=store.read(),old=before.data.outfits[0];
+  run(store,{type:'upsert-owned-outfit',record:{...old,season:'autumn'},expected:old});
+  const after=store.read();assert.deepEqual(after.data.outfits.map(o=>o.id),['first','middle','last']);assert.deepEqual(after.data.outfits.slice(1),before.data.outfits.slice(1));assert.deepEqual(after.relationships,before.relationships);
+  for(const id of ['first-note','second-note'])run(store,{type:'save-note',record:{id,title:id,text:'retained'}});
+  const note=store.read().data.saved[0];run(store,{type:'save-note',record:{...note,text:'changed'},expected:note});assert.deepEqual(store.read().data.saved.map(n=>n.id),['first-note','second-note']);
+});
 test('SQL rejects invalid links, duplicate slots, duplicate garments and identity edits',t=>{
   const {store,file}=fixture(t);run(store,{type:'upsert-owned-outfit',record:look()});const db=new DatabaseSync(file);db.exec('PRAGMA foreign_keys=ON');
   try{
@@ -48,7 +56,7 @@ test('delete impact is explicit and atomic; aliases, image versions and descenda
 test('status is separate from ownership and retains existing outfit relationships',t=>{
   const {store}=fixture(t);run(store,{type:'upsert-owned-outfit',record:look()});const item=store.catalog().items[0];
   run(store,{type:'set-garment-status',records:[item],status:'pending-discard'});assert.equal(store.read().relationships.garments.length,2);assert.equal(store.catalog().items[0].wardrobeStatus,'pending-discard');
-  assert.throws(()=>run(store,{type:'upsert-owned-outfit',record:look('new')}),/Garment is set aside/);
+  assert.throws(()=>run(store,{type:'upsert-owned-outfit',record:look('new')}),/set aside/);
   assert.throws(()=>run(store,{type:'set-garment-status',records:[item],status:'active'}),/已改变/);
 });
 test('stale writes, idempotency and backup failure never partially apply',t=>{

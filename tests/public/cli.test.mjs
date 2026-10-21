@@ -22,7 +22,7 @@ test('intake, dedup, status, image registration, lookup and outfit CLI all share
   await run('set-garment-status.mjs','active',added.code);
   await run('register-media.mjs',image,'assets/outfits/synthetic-v1.png');
   const look=path.join(dir,'look.json');fs.writeFileSync(look,JSON.stringify({id:'cli-look',title:'Synthetic look',selection:{inner:added.code,bottom:'KZ01'},visual:{kind:'ai',src:'assets/outfits/synthetic-v1.png',alt:'synthetic',garmentIds:[added.code,'KZ01']}}));
-  assert.equal(JSON.parse(await run('save-owned-outfit.mjs',look)).saved,'cli-look');assert.match(await run('save-owned-outfit.mjs',look),/内容相同/);
+  assert.equal(JSON.parse(await run('save-owned-outfit.mjs',look)).saved,'cli-look');assert.match(await run('save-owned-outfit.mjs',look),/same content/);
   assert.equal((await(await fetch(origin+'/data/catalog.json')).json()).items.length,4);
   assert(!fs.existsSync(path.join(dir,'dist/data/catalog.json')));
 });

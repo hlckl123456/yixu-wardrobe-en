@@ -10,8 +10,10 @@ export function applyCommand(previous, command, items = [], resolveReference) {
   assertCurrentCommand(command?.type);
   const data = normalizePreferences(previous);
   switch (command.type) {
-    case 'upsert-owned-outfit': {
+    case 'upsert-owned-outfit':
+    case 'upsert-planned-outfit': {
       const record=normalizePreferences({outfits:[command.record]}).outfits[0];
+      if((command.type==='upsert-planned-outfit')!==(record.outfitKind==='planned'))throw Error('Choose the owned-outfit or planned-outfit command explicitly');
       if(record.sourceReference&&!resolveReference?.(record.sourceReference))throw Error('The style reference is invalid or unavailable; outfit not saved');
       const entries=Object.entries(record.selection);
       if(!entries.length||new Set(entries.map(([,id])=>id)).size!==entries.length)throw Error('An outfit must contain garments, with each garment used once');

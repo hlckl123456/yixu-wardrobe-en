@@ -1,5 +1,5 @@
 // English display copy only. Never use these labels as database keys or IDs.
-export const uiNames={outfits:'My outfits',closet:'My wardrobe',formulas:'Style inspiration',analysis:'Wardrobe overview',discard:'Ready to let go',notes:'Outfit notes'};
+export const uiNames={outfits:'My outfits',mix:'Outfit shuffle',closet:'My wardrobe',formulas:'Style inspiration',analysis:'Wardrobe overview',discard:'Ready to let go',notes:'Outfit notes'};
 export const countLabel=(count,singular,plural=singular+'s')=>`${count} ${count===1?singular:plural}`;
 const seasons={winter:'Winter',autumn:'Fall & winter',transition:'Spring & fall',summer:'Summer',unclassified:'Uncategorized'};
 const styles={minimal:'Minimal',relaxed:'Relaxed casual',street:'Streetwear'};
