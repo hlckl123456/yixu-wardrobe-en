@@ -1,70 +1,75 @@
 # Yixu
 
-Yixu helps you browse clothes you actually own and the outfits you have saved with them. Your garment photos and outfit records stay on your computer. Open an outfit to see which wardrobe items it uses.
+**See what is already in your wardrobe before deciding what to wear.**
 
-This is the runnable source edition. A fresh download starts with an empty wardrobe and contains none of the creator's personal photos or outfits. [中文版](https://github.com/hlckl123456/yixu-wardrobe-zh).
+I built Yixu because I kept wearing the same few pieces while forgetting what else I owned. I photographed my clothes, used Codex to explore outfit ideas, and kept only the looks I would actually wear. Yixu keeps those reviewed items and outfits together, so I can find them again when I need them.
+
+This repository is the runnable **English source edition**. The [Chinese edition](https://github.com/hlckl123456/yixu-wardrobe-zh) is available separately. A fresh download starts with an empty wardrobe; neither edition includes my photos, outfits, or private records.
 
 ## What you can do
 
-- **My outfits** shows saved looks in their saved order. Season and style filters are one click away, and each look links back to its wardrobe items.
-- **Outfit shuffle** draws up to four looks from saved outfits that have an image and use currently active items. Choose a mood and season, then shuffle again. Looks you have not seen in the current round come first.
-- **My wardrobe** lets you browse by category, subtype, or number of saved outfit links. Open an item to find its outfits, or open Wardrobe overview for category and color charts. Ready to let go is a secondary wardrobe view; those records remain available.
-- **Color palette** switches the page between sand, rose, blue, and sage.
+| Page | What it shows |
+| --- | --- |
+| My wardrobe | Browse the items you have added, open an item to find its outfits, filter by saved-outfit usage, and view category and color charts. |
+| My outfits | Browse the looks you chose to save, in their saved order. Filter by season and style. |
+| Outfit shuffle | Pick a season and mood, then see up to four eligible saved looks at a time. Shuffle again for another random batch; unseen looks take priority within a round. |
 
-You can also save a planned outfit with clearly labeled pieces you do not own yet. Those pieces never become wardrobe inventory.
+The palette in the top right switches between sand, rose, blue, and sage. Items marked “Ready to let go” remain available in a secondary wardrobe view; changing their status does not erase their records.
 
-## Run it locally
+Yixu browses **outfits you have already saved**. “Shuffle again” does not call an AI model or generate new looks. You can use Codex or another tool to prepare photos and explore ideas outside the website, then decide what to save.
 
-You need Node.js 24 or later. Normal use has no additional npm runtime dependencies.
+## Try the synthetic sample
+
+You need Node.js 24 or later. Normal use has no additional npm runtime dependencies. This sample contains three geometric garment images and one outfit without an outfit image. It includes none of my private data.
 
 ```sh
 git clone https://github.com/hlckl123456/yixu-wardrobe-en.git
 cd yixu-wardrobe-en
-npm start
-```
-
-Open [http://127.0.0.1:4184/#outfits](http://127.0.0.1:4184/#outfits). Use `npm run status` to check the server and `npm stop` to stop it. Stopping the server does not delete your wardrobe.
-
-On macOS, you can also double-click `Start Wardrobe.command` and `Stop Wardrobe.command`. If the launcher cannot find Node, set `YIXU_NODE_BIN` to your Node executable.
-
-## Try the synthetic sample
-
-The sample has three geometric garment images and one outfit without an outfit image. It is useful for checking item details, outfit links, and Wardrobe overview. It will not appear in Outfit shuffle because that view requires illustrated outfits. Choose a directory that does not already exist.
-
-```sh
 npm run demo -- "$PWD/demo-data"
 YIXU_DATA_DIR="$PWD/demo-data" node scripts/local.mjs start 4194
 ```
 
-Open [http://127.0.0.1:4194/#outfits](http://127.0.0.1:4194/#outfits). When you are done:
+Open the [synthetic sample](http://127.0.0.1:4194/#outfits) to explore item-to-outfit links, Wardrobe overview, and the palette. Outfit shuffle will show its empty state because the sample look has no image. To see four-look batches, you first need to save illustrated outfits. The [demo walkthrough](docs/DEMO.md) suggests what to inspect.
+
+When you are finished:
 
 ```sh
 YIXU_DATA_DIR="$PWD/demo-data" node scripts/local.mjs stop 4194
 ```
 
-The environment-variable syntax above is for macOS and Linux. In PowerShell, set `$env:YIXU_DATA_DIR` before running the same Node commands. The [demo walkthrough](docs/DEMO.md) suggests what to inspect.
+`demo-data/` is ignored by Git. Use a new, nonexistent directory for the sample; the command will not overwrite an existing wardrobe.
 
-## Add your own clothes
+The environment-variable syntax above is for macOS and Linux. In Windows PowerShell, set `$env:YIXU_DATA_DIR = "$PWD/demo-data"` before running the same `node scripts/local.mjs` commands.
 
-The website is for browsing. Photo upload and editing happen outside the page, through tools you choose and the maintenance commands in this repository.
+## Start your own wardrobe
 
-1. Photograph an item, prepare its cutout, and compare the result with the original. Review and record any AI reconstruction of hidden areas.
-2. Prepare its metadata using the [maintenance guide](docs/MAINTENANCE.md), then add it with `scripts/intake.mjs`.
-3. Make and review an outfit using your existing items, then save it with `scripts/save-owned-outfit.mjs`.
+To start with an empty wardrobe, run:
 
-You can discuss outfit ideas in Codex or another external tool. This repository has no built-in model call, and Shuffle again does not create new outfits. “Not in any outfits” and “In 1–2 outfits” count links to saved looks, not real-world wears.
+```sh
+npm start
+```
 
-## Where your data lives
+Open [your local wardrobe](http://127.0.0.1:4184/#outfits). The server listens only on `127.0.0.1`. Use `npm run status` to check it and `npm stop` to stop it; stopping keeps your data. On macOS, you can also double-click `Start Wardrobe.command` and `Stop Wardrobe.command`. If the launcher cannot find Node, set `YIXU_NODE_BIN` to your Node executable.
 
-By default, data is stored in `private-data/` inside this checkout, which Git ignores. Set `YIXU_DATA_DIR` to an absolute path if you want another location. Keep databases, images, and backups out of GitHub.
+The website is for browsing. To add your own clothes, use the maintenance commands rather than an upload or edit button:
 
-The server binds only to `127.0.0.1`. It is built for one person on one computer, with no accounts or public-hosting access control. The Chinese and English repositories have separate data directories and do not sync automatically. See the [security notes](SECURITY.md).
+1. Photograph each item, prepare a cutout, and compare the result with the original. Review and record any AI reconstruction of hidden areas.
+2. Prepare item details using the [maintenance guide](docs/MAINTENANCE.md#add-a-garment), then add them with `scripts/intake.mjs`.
+3. Make outfit candidates using items you own. Review the images and save the looks you want with `scripts/save-owned-outfit.mjs`.
+
+Saved looks appear in My outfits. Only ordinary looks with an image and currently active items appear in Outfit shuffle. You can also save a planned outfit with clearly marked pieces you do not own yet; those pieces do not become wardrobe inventory.
+
+## Where your data stays
+
+By default, data lives in `private-data/` inside this checkout, which Git ignores. Set `YIXU_DATA_DIR` to a different absolute path if you prefer. Keep the database, photos, and backups on your computer and out of GitHub.
+
+This is a single-person local app. It has no accounts, multi-user permissions, or access controls for public hosting. The Chinese and English repositories use separate data directories and do not sync automatically. See the [security notes](SECURITY.md). “Not in any outfits” and “In 1–2 outfits” count links to saved looks, not real-world wears.
 
 ## More information
 
-- [Demo walkthrough](docs/DEMO.md) shows the pages using synthetic data.
-- [Maintenance guide](docs/MAINTENANCE.md) covers intake, updates, checks, backup, and restore.
-- [Architecture](docs/ARCHITECTURE.md) explains storage, outfit relationships, and browser reads.
+- [Demo walkthrough](docs/DEMO.md) suggests a route through the synthetic sample.
+- [Maintenance guide](docs/MAINTENANCE.md) covers adding and changing records, backup, and restore.
+- [Architecture](docs/ARCHITECTURE.md) explains storage, images, and outfit relationships.
 - [English interface copy](docs/UI-COPY.md) records the wording used in this edition.
 
-For development, run `npm test` and `npm run check`. Tests use temporary databases and synthetic images. The project uses the [MIT License](LICENSE); the creator's private photos and data are not included.
+After changing the source, run `npm test` and `npm run check`. Tests use temporary databases and synthetic images. The code is under the [MIT License](LICENSE); my private photos and wardrobe data are not in this repository.
