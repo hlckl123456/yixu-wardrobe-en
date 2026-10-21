@@ -67,6 +67,7 @@ This is a single-person local app. It has no accounts, multi-user permissions, o
 
 ## More information
 
+- [Wardrobe intake and AI collaboration](docs/AGENT-WORKFLOW.md) covers image preparation, outfit review, common recognition errors, and a new-chat handover template.
 - [Demo walkthrough](docs/DEMO.md) suggests a route through the synthetic sample.
 - [Maintenance guide](docs/MAINTENANCE.md) covers adding and changing records, backup, and restore.
 - [Architecture](docs/ARCHITECTURE.md) explains storage, images, and outfit relationships.
