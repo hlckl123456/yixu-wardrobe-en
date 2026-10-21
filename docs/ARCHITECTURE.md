@@ -1,32 +1,39 @@
-# Runtime data boundary
+# Architecture
 
-Browser views → local JSON API → domain validation → one SQLite transaction.
+Yixu runs on your computer. The browser reads garments, outfits, and registered images from a service on `127.0.0.1`. The database and images remain in the directory selected by `YIXU_DATA_DIR`. Browser pages have no write controls; maintenance commands submit changes through the same local service.
 
-| Entity | Authority | Behavior |
+## Source of truth
+
+| Data | SQLite tables | Rule |
 | --- | --- | --- |
-| Garment | garments + identities | Metadata JSON, constrained availability, persistent deletion tombstone |
-| Outfit | outfits + identities | Descriptive JSON; no duplicate selection, source or image fields |
-| Membership | outfit_items | Garment FK, outfit FK, unique slot and garment per outfit |
-| Derivation | outfit_sources | Source refers to permanent identity; parent deletion never deletes descendants |
-| Images | garment_versions / outfit_visuals + media_assets | Immutable relative paths, SHA-256, explicit version/provenance |
-| Notes / old drafts / curation | notes / metadata / formula_preferences | Retained, never used as an alternate active formula engine |
-| References / guides / preferences | documents | Validated versioned command snapshots; CK reservations stay in document |
-| Command/import receipts | commands / imports | Transactional idempotency and legacy import fingerprints |
+| Garments and codes | `garments`, `identities` | Availability is separate from ownership; removed codes stay reserved. |
+| Outfits and codes | `outfits`, `identities` | Descriptive fields and saved order are kept with the outfit record. |
+| Owned items in an outfit | `outfit_items` | Foreign keys point to real garments; a look cannot duplicate a slot or garment. |
+| Outfit origins | `outfit_sources` | Historical derivation survives removal of a parent outfit. |
+| Images and versions | `garment_versions`, `outfit_visuals`, `media_assets` | Relative paths and SHA-256 hashes are registered; image bytes are not overwritten. |
+| Notes and older material | `notes`, `documents`, `formula_preferences` | Historical material and preferences remain, although the old inspiration UI is retired. |
+| Operation receipts | `commands`, `imports` | Used to detect repeated requests and completed imports. |
 
-An explicitly saved planned outfit has `outfitKind: "planned"` plus validated `suggestedPieces` in its descriptive SQL payload. These unpurchased concepts have no inventory IDs and never enter `outfit_items`; only real owned components receive foreign-key memberships. The separate `upsert-planned-outfit` command preserves this distinction through normalization, snapshots and backups. All outfit views disclose incomplete ownership. Ordinary owned saves continue to reject shopping concepts.
+`wardrobe.sqlite` is the only writable record of inventory, saved outfits, and their relationships. Resources such as `catalog.json` returned to the browser are database projections, not a second catalog to maintain.
 
-SQLite uses foreign_keys=ON, WAL, busy_timeout, synchronous=FULL and BEGIN IMMEDIATE. Migrations are transactional; a newer schema is rejected. Garment IDs and outfit aliases are never reused. Ordinary commands write only affected rows and increment one revision. State and relationship projections share that revision.
+A planned look is explicitly marked `outfitKind: "planned"`. Its `suggestedPieces` describe unpurchased concepts without creating garment IDs or `outfit_items` rows. Pieces the user actually owns still receive normal `outfit_items` links. An ordinary owned outfit cannot present a shopping concept as inventory.
 
-Files cannot join a SQL transaction. Media staging writes/fsyncs a temporary file and publishes it without overwrite. Registration verifies hashes; commands validate registered assets before recording relationships. Failed operations may leave a harmless unregistered file. No automatic orphan deletion is performed. Serving uses an explicit URL registry, realpath containment and a hash check; source archives, preferences, databases and backups are unreachable.
+## Writes and media
 
-The server projects catalog/reference/thumbnail URLs for browser compatibility. These URLs are not independent writable files. Primary views remain usable if reference parsing fails. Taxonomy, matching, route adaptation, legacy storage reading and view rendering retain separate modules.
+Maintenance tools read the current record, then submit a command with the expected previous value to the local service. The service validates the command and relationships before committing one SQLite transaction. Foreign keys are enabled, issued codes are never reused, and editing an outfit does not move its saved position.
 
-The `#mix` browser view derives its eligible pool from the current outfit and garment API projections. It excludes planned looks, missing visuals and unavailable garments, then applies the shared season/style filters. A session-only shuffled queue stores outfit IDs per filter scope; each render resolves them against current records, and membership changes invalidate that scope. No separate relationship mapping, generated outfit or persisted preference is created. Cards and details use the same renderer as My Outfits.
+Image files are staged before they are registered by hash. An outfit or garment can only reference a registered, available image. The server serves exact registered URLs and checks path containment and file hashes. Retiring an image revokes its served URL while keeping private recovery history. A SQLite transaction cannot roll back filesystem writes, so a failed intake may leave an unregistered file; the application does not delete it automatically.
 
-Runtime rendering uses `views/personal.js` with the desktop shell in `workspace.js`/`workspace.css`. Pending discard remains a separate availability view linked from the wardrobe; its overview tab (`#closet?view=overview`) replaces the item grid with non-interactive category and color charts derived by `closet-overview.js` from active catalog records, without persisting analytics. Browser resources refresh through the existing validated catalog resource and local repository. Dialogs resolve current SQL memberships and retain explicit unknown/error states. The independent classic `appearance.js` applies one of four CSS palettes before styling loads and remembers only its theme identifier under `yixu:appearance:v1`; it never writes wardrobe storage or SQL. A blocked storage API falls back to the default palette while session switching remains available.
+A database snapshot is retained before a data write. A portable backup also copies registered images; a SQLite snapshot alone is not a [complete backup](MAINTENANCE.md#back-up-and-restore).
 
-`workspaceRoute` retires the reference UI and redirects legacy analysis links into the wardrobe overview. The runtime no longer imports reference features or requests reference/guide documents. Historical `baseRoute` and source-link resolution remain separate for CLI validation of stored provenance; removing a browser feature does not rewrite outfit sources or delete private originals. Personal notes remain accessible separately when present.
+## Browser views
 
-Tests are deterministic synthetic fixtures. Owner-specific historical regression scripts are kept in private migration archives, not the public test suite. A release export excludes Git, private archives, candidate batches, all photos and deployment metadata. It is not a publication operation.
+My outfits reads the full saved list and keeps its order. Season and style controls only filter the current view. Outfit shuffle starts with saved, illustrated, ordinary outfits whose owned items are still active, then applies the selected mood and season. Each filter scope keeps a shuffled queue for the current session, prioritizing unseen looks and restoring the current batch when you return to a scope. It does not generate, save, or reorder outfits.
 
-Limitations: single local user, read-only website, manual CLI maintenance, no authentication/LAN serving, no automatic synchronization or background AI. Runtime SQL snapshots do not themselves copy private processing archives; portable backup copies the registered media set. Restore always targets a new directory to protect newer edits.
+My wardrobe derives categories and saved-outfit usage from garments and SQL relationships. Wardrobe overview computes category and color charts from active items without storing a separate analysis. Ready to let go is a garment-status view; setting that status does not physically discard anything. The four color themes store only a theme identifier in browser storage, not in the wardrobe database. If storage is blocked, switching themes still works for the current page.
+
+The browser reads through the local API and shows an error if a read fails rather than showing a false empty wardrobe. Older browser storage is a migration source only; migration preserves its original bytes. Old inspiration and analysis links redirect into current views while historical source identifiers stay available for validating older records.
+
+## Tests and publication
+
+Tests use temporary databases and synthetic images. The public source export contains allowlisted code and documentation, not private photos, databases, candidate pages, or old Git history. The service is designed for one local user; it has no accounts, multi-user permissions, automatic sync, or built-in AI service.

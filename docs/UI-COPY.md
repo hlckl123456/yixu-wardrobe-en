@@ -1,49 +1,35 @@
-# English interface copy and icons
+# English interface wording
 
-Keep display wording separate from SQLite keys, garment codes and canonical category IDs. Shared page names, season labels and plural counts live in `dist/ui-copy.js`.
+This file is for contributors changing labels in the English edition. Display text may change, but garment codes, saved records, and category IDs must not. Shared page names, season labels, and count helpers live in `dist/ui-copy.js`.
 
-## Terminology
+## Names used in the app
 
-| Label | Meaning |
+| Label | What it refers to |
 | --- | --- |
-| My wardrobe | Items the user plans to keep wearing. |
-| Tops | Shirts, T-shirts, sweaters and other tops; not just thermal base layers. |
-| My outfits | Saved combinations of wardrobe items. |
-| Outfit shuffle | Random batches of up to four already saved, illustrated outfits; no new generation. |
-| Wardrobe overview | Charts of active item categories and recorded color families. |
-| Not in any outfits | No links to saved outfits; not a record of actual wears. |
-| Ready to let go | Items set aside, with records retained and restoration possible. |
-| Planned outfit | A saved concept with labeled unpurchased pieces; they are not wardrobe inventory. |
+| My outfits | Saved combinations, shown in their saved order. |
+| Outfit shuffle | Random batches of up to four saved looks with images; it does not create new looks. |
+| My wardrobe | Active items recorded as owned. |
+| Wardrobe overview | Category and recorded-color charts for active items. |
+| Not in any outfits | An item with no links to saved outfits, not an item the user has never worn. |
+| In 1–2 outfits | The number of saved outfit links, not actual wears. |
+| Ready to let go | Set-aside items whose records remain available. |
+| Planned outfit | A saved look with clearly marked pieces that are not yet owned. |
 
-Use “item” for a general wardrobe record. Use garment-specific words when they help, such as shirt, trousers or shoes. Keep owned items, AI-prepared images and unverified basic layers clearly distinct.
+Use “item” for a general wardrobe record and a more specific word, such as “trousers,” when it improves clarity. Keep owned garments, suggested purchases, assumed basics, and AI-prepared images distinct. An image cannot verify size, fabric, or fit.
 
-## Wording
+## Labels and messages
 
-- Use sentence case for interface headings, labels and actions, following the [Microsoft style guide](https://learn.microsoft.com/en-us/style-guide/text-formatting/using-type/use-sentence-style-capitalization). Preserve brand names and user-authored titles.
-- Name the action, such as “View details” or “Try again”, following [GOV.UK button guidance](https://design-system.service.gov.uk/components/button/). Do not imply web upload, in-page editing, automatic purchases or a built-in image generator.
-- Use the shared count helper: “1 item”, “2 items”, “1 outfit”, “2 outfits”. Do not assemble nouns independently in each view.
-- Distinguish missing information from a confirmed mismatch. Say “Not confirmed” without guessing size, material, warmth or hidden construction.
-- Keep error messages short, explain the next step and retain retry controls. Never present a failed read as an empty wardrobe.
-- Display season labels consistently from canonical IDs. Label changes must not reclassify saved outfits or reference records.
-- Keep photo provenance and fit limitations visible. AI previews compare ideas; they do not establish real fit.
+- Use sentence case for headings and controls. Keep brand names and user-written titles as they are.
+- Name the action on a button: “View details,” “Shuffle again,” or “Try again.” Do not suggest that the website can upload photos, edit garments, or generate outfits.
+- Use the shared count helper so singular and plural labels agree: “1 item,” “2 items,” “1 outfit,” “2 outfits.”
+- Do not turn missing information into a conclusion. Use “Not confirmed” when a detail has not been checked.
+- A failed read is an error state with a way to retry, not an empty wardrobe.
+- Season and category labels may be translated; the stored IDs and matching rules stay the same.
 
-## Icons
+## Icons and accessibility
 
-Use the inline SVG set in `dist/views/shared.js`. Icons share a 24 × 24 view box, rounded strokes and no runtime icon dependency.
+The app uses the inline SVG icons in `dist/views/shared.js`. Navigation icons sit beside visible text. Decorative SVGs have `aria-hidden="true"` and `focusable="false"`; an icon-only button needs an accessible action name. The text alternative should name the action.
 
-| Action | Icon |
-| --- | --- |
-| Go to another view in the app | Right arrow |
-| Go back | Left arrow before the label |
-| Enlarge an image in a dialog | Expand corners |
-| Open a link in a new tab | External-link icon plus an accessible new-tab hint |
-| Jump down to wardrobe matches | Down chevron |
-| Close a dialog | X icon with a specific accessible name |
+Use an arrow for navigation, expand corners for image enlargement, and an external-link icon only when a link actually opens a new tab. The set-aside view must not use wording or an icon that implies permanent deletion.
 
-Keep visible text beside navigation icons. Decorative SVGs use `aria-hidden="true"` and `focusable="false"`; icon-only buttons need a clear accessible name. The text alternative describes the action rather than the drawing, following [W3C guidance on functional images](https://www.w3.org/WAI/tutorials/images/functional/).
-
-Use a hanger for the wardrobe, a lookbook icon for outfits, a picture icon for inspiration, and a chart for the overview. The trash-can icon labels the set-aside collection; it must not become a permanent-delete action.
-
-## Checks
-
-`tests/public/english-ui.test.mjs` covers terminology, plural counts, icon semantics, loading and error states, relevant item-detail fields and unchanged input records. Also check rendered desktop and narrow layouts, keyboard focus, dialog dismissal, image enlargement and garment-to-outfit links before shipping UI changes.
+`tests/public/english-ui.test.mjs` checks terminology, counts, icon semantics, loading and error states, and item details. After changing a page, also inspect the rendered interface, keyboard focus, dialogs, and garment-to-outfit links.

@@ -1,12 +1,14 @@
-# Demo walkthrough
+# Walk through the synthetic sample
 
-Start the synthetic sample using the README. Its geometric images verify the workflow; they do not illustrate real styling.
+Start the sample using the [README](../README.md#try-the-synthetic-sample). It contains three geometric garment images and one outfit without an outfit image. None of the creator's clothes are included.
 
-1. Open My outfits to see the saved sample look. With a larger wardrobe, the season and style buttons filter the full list without changing its saved order.
-2. Open Outfit shuffle and try the mood and season controls. The synthetic sample has one outfit, so Shuffle again is disabled; a four-look batch needs more saved outfits.
-3. Open My wardrobe and browse categories with stable item codes. Open the blue sample top, then follow its linked outfit.
-4. Filter to Not in any outfits; the sample jacket appears there. Open Wardrobe overview for category and color charts, then try the four header palette themes.
-5. Show an external chat or maintenance command separately. The website has no photo upload or AI generation button; do not imply otherwise.
-6. To demonstrate Ready to let go, query the sample jacket's current code first. Use the status command in the maintenance guide against the sample server's origin and data directory only.
+## What to look at
 
-When recording real clothes, review prepared images against the originals. AI images help compare combinations; they cannot verify size, fabric or actual fit.
+1. Open My outfits. The sample look links to the blue top and gray trousers. The full list keeps its saved order; season and style buttons only filter what you see.
+2. Open My wardrobe. Select the blue top, inspect its details, and follow the link to its saved outfit. The brown jacket is not used by that look, so you can find it with “Not in any outfits.”
+3. Open Wardrobe overview to see category and color counts, then try the four page colors in the header palette.
+4. Open Outfit shuffle. An empty state is expected: the sample outfit has no outfit image. To show four-at-a-time batches and Shuffle again, add at least five illustrated outfits whose items are still active.
+
+Ready to let go is available from My wardrobe. If you want to demonstrate a status change, look up the sample jacket's current code with `lookup-codes.mjs`, then use the [status command](MAINTENANCE.md#everyday-maintenance) against the sample server and data directory. Do not run demonstration commands against your real wardrobe.
+
+The website does not upload photos or generate outfits on the page. Show any external chat and maintenance steps separately. Compare AI-prepared images with the real garments; an image cannot establish size, fabric, or fit.

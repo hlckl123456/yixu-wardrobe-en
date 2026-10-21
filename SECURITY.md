@@ -1,13 +1,11 @@
-# Security boundaries
+# Security and privacy
 
-This is a single-user local application. The server binds to `127.0.0.1` and checks Host and request origins. Browser pages are read-only; maintenance commands can change local data.
+Yixu is built for one person on one computer. The server binds to `127.0.0.1` and checks request hosts and origins. Browser pages are read-only, while maintenance commands can change local data. These checks are not account authentication; the project has no access control for public hosting.
 
-There are no accounts, user authentication, multi-user permissions or public-hosting configuration. Same-origin checks are not login authentication. Do not bind the service to a public interface, expose it through a public proxy or give untrusted programs access to its maintenance API.
+Do not expose the local service through a public proxy or let untrusted programs call its maintenance API. Back up your wardrobe before running unfamiliar scripts.
 
-Install code and maintenance tools from trusted sources. Back up local data before running unfamiliar scripts.
+Garment photos, databases, and backups belong in `private-data/` or another private data directory, outside Git tracking. A public repository should not contain real wardrobes, candidate pages, conversations, or credentials. `.gitignore` only prevents future accidental adds; it cannot remove files from earlier commits. If you publish a private development project, start a new public history from an audited source export.
 
-Never commit `private-data/`, sample runtime directories, SQLite files, backups, photos, secrets or conversations. A `.gitignore` cannot remove files from earlier commits. Export and audit source into a fresh repository before publishing a private development project.
+A database snapshot contains only database data. Use `scripts/backup-private.mjs` to include registered images, and restore to a new directory so later edits are not overwritten. See the [maintenance guide](docs/MAINTENANCE.md#back-up-and-restore).
 
-SQLite snapshots are not a full media backup. Use `backup-private.mjs` for the database and registered images. Restore into a new directory instead of overwriting later edits.
-
-Do not attach real wardrobes, databases, photos or credentials to public issues. Report problems with synthetic records and a minimal reproduction.
+For public issues, use synthetic records and a minimal reproduction. Do not upload real wardrobe data, photos, databases, or credentials.

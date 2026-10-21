@@ -1,25 +1,21 @@
-# Yixu · English Wardrobe
+# Yixu
 
-A wardrobe app that runs on your own computer. Keep a record of your clothes, save outfits you would wear, and see which pieces have not made it into your saved looks.
+Yixu helps you browse clothes you actually own and the outfits you have saved with them. Your garment photos and outfit records stay on your computer. Open an outfit to see which wardrobe items it uses.
 
-**[中文版 → yixu-wardrobe-zh](https://github.com/hlckl123456/yixu-wardrobe-zh)**
+This is the runnable source edition. A fresh download starts with an empty wardrobe and contains none of the creator's personal photos or outfits. [中文版](https://github.com/hlckl123456/yixu-wardrobe-zh).
 
-## What it does
+## What you can do
 
-- Browse My outfits in saved order, with direct season and style filters.
-- Use Outfit shuffle to see up to four saved looks at a time, filtered by mood and season. Each batch is random and unseen looks appear first.
-- Browse My wardrobe by category, subtype, or use in saved outfits. Open an item to see its linked looks, or open Wardrobe overview for category and color charts.
-- Switch the whole interface between sand, rose, blue, and sage with the header palette. Ready to let go remains a secondary wardrobe view, with records retained for restoration.
-- Save reviewed planned looks with clearly marked unpurchased pieces. Those pieces do not become wardrobe inventory.
-- Store garments, outfits and their relationships in SQLite, with local images checked for integrity.
+- **My outfits** shows saved looks in their saved order. Season and style filters are one click away, and each look links back to its wardrobe items.
+- **Outfit shuffle** draws up to four looks from saved outfits that have an image and use currently active items. Choose a mood and season, then shuffle again. Looks you have not seen in the current round come first.
+- **My wardrobe** lets you browse by category, subtype, or number of saved outfit links. Open an item to find its outfits, or open Wardrobe overview for category and color charts. Ready to let go is a secondary wardrobe view; those records remain available.
+- **Color palette** switches the page between sand, rose, blue, and sage.
 
-The website is a browser for your wardrobe. Photo preparation, outfit generation and intake happen through your chosen external chat or AI tools and this project's maintenance commands. This version has no web upload button, built-in model API, automatic background removal or one-click outfit generator.
+You can also save a planned outfit with clearly labeled pieces you do not own yet. Those pieces never become wardrobe inventory.
 
-Outfit shuffle only browses saved looks; clicking it does not generate new outfits. My outfits still keeps the full list and saved order. The first shuffle batch is random, and later batches show their number in the current session.
+## Run it locally
 
-## Run
-
-Use Node.js 24 or later. No runtime npm dependencies need to be installed.
+You need Node.js 24 or later. Normal use has no additional npm runtime dependencies.
 
 ```sh
 git clone https://github.com/hlckl123456/yixu-wardrobe-en.git
@@ -27,70 +23,48 @@ cd yixu-wardrobe-en
 npm start
 ```
 
-Open http://127.0.0.1:4184/#outfits. A fresh installation starts with an empty wardrobe.
+Open [http://127.0.0.1:4184/#outfits](http://127.0.0.1:4184/#outfits). Use `npm run status` to check the server and `npm stop` to stop it. Stopping the server does not delete your wardrobe.
 
-```sh
-npm run status
-npm stop
-```
+On macOS, you can also double-click `Start Wardrobe.command` and `Stop Wardrobe.command`. If the launcher cannot find Node, set `YIXU_NODE_BIN` to your Node executable.
 
-On macOS, you can also double-click `Start Wardrobe.command` and `Stop Wardrobe.command`. Set `YIXU_NODE_BIN` to a runtime path if the launcher cannot find Node.
+## Try the synthetic sample
 
-## Try a sample first
-
-The sample contains geometric images and fictional records, not photos or real garments. The `demo-data` directory must not already exist.
+The sample has three geometric garment images and one outfit without an outfit image. It is useful for checking item details, outfit links, and Wardrobe overview. It will not appear in Outfit shuffle because that view requires illustrated outfits. Choose a directory that does not already exist.
 
 ```sh
 npm run demo -- "$PWD/demo-data"
 YIXU_DATA_DIR="$PWD/demo-data" node scripts/local.mjs start 4194
 ```
 
-Open http://127.0.0.1:4194/#outfits. The sample contains three synthetic garments and one outfit. Open a garment detail panel, then follow its linked outfit.
-
-Stop the sample server:
+Open [http://127.0.0.1:4194/#outfits](http://127.0.0.1:4194/#outfits). When you are done:
 
 ```sh
 YIXU_DATA_DIR="$PWD/demo-data" node scripts/local.mjs stop 4194
 ```
 
-These commands use macOS/Linux shell syntax. On Windows, set `$env:YIXU_DATA_DIR` in PowerShell before running the same `node` commands.
+The environment-variable syntax above is for macOS and Linux. In PowerShell, set `$env:YIXU_DATA_DIR` before running the same Node commands. The [demo walkthrough](docs/DEMO.md) suggests what to inspect.
 
 ## Add your own clothes
 
-1. Photograph your clothes and remove the background using a tool of your choice. Review and document any AI reconstruction of hidden areas.
-2. Prepare a reviewed intake manifest and run `scripts/intake.mjs`, following the [maintenance guide](docs/MAINTENANCE.md).
-3. Save confirmed looks with `scripts/save-owned-outfit.mjs`. Owned outfits reference real garment records. Explicit `outfitKind: "planned"` looks may include unpurchased pieces without adding them to inventory.
+The website is for browsing. Photo upload and editing happen outside the page, through tools you choose and the maintenance commands in this repository.
 
-Not in any outfits and In 1–2 outfits count saved outfit links, not actual wears. A low count is a reason to review a piece, not a decision to discard it.
+1. Photograph an item, prepare its cutout, and compare the result with the original. Review and record any AI reconstruction of hidden areas.
+2. Prepare its metadata using the [maintenance guide](docs/MAINTENANCE.md), then add it with `scripts/intake.mjs`.
+3. Make and review an outfit using your existing items, then save it with `scripts/save-owned-outfit.mjs`.
 
-## Data and privacy
+You can discuss outfit ideas in Codex or another external tool. This repository has no built-in model call, and Shuffle again does not create new outfits. “Not in any outfits” and “In 1–2 outfits” count links to saved looks, not real-world wears.
 
-Data defaults to `private-data/` inside this checkout, which Git ignores. Set an absolute `YIXU_DATA_DIR` to use another location.
+## Where your data lives
 
-This repository contains code, documentation and synthetic test utilities only. The developer's garment photos, outfit images, database, conversations, private candidate pages and old Git history are not included.
+By default, data is stored in `private-data/` inside this checkout, which Git ignores. Set `YIXU_DATA_DIR` to an absolute path if you want another location. Keep databases, images, and backups out of GitHub.
 
-The server listens on `127.0.0.1` only. It is a single-user local app without accounts or multi-user authorization. Do not expose it directly to the internet or commit databases and backups. See [security boundaries](SECURITY.md).
+The server binds only to `127.0.0.1`. It is built for one person on one computer, with no accounts or public-hosting access control. The Chinese and English repositories have separate data directories and do not sync automatically. See the [security notes](SECURITY.md).
 
-The Chinese and English repositories run independently. Their data does not sync automatically.
+## More information
 
-## Develop
+- [Demo walkthrough](docs/DEMO.md) shows the pages using synthetic data.
+- [Maintenance guide](docs/MAINTENANCE.md) covers intake, updates, checks, backup, and restore.
+- [Architecture](docs/ARCHITECTURE.md) explains storage, outfit relationships, and browser reads.
+- [English interface copy](docs/UI-COPY.md) records the wording used in this edition.
 
-```sh
-npm test
-npm run check
-```
-
-Tests use temporary databases and synthetic images, not your wardrobe. No build step is required. The frontend uses native JavaScript modules; the backend uses Node's built-in SQLite support.
-
-- [Architecture and relationships](docs/ARCHITECTURE.md)
-- [Intake, backups and restoration](docs/MAINTENANCE.md)
-- [Demo walkthrough](docs/DEMO.md)
-- [English interface wording and icons](docs/UI-COPY.md)
-
-The optional thumbnail script requires a separately installed `sharp`. Normal browsing and tests do not.
-
-An optional [GitHub Actions test template](docs/ci-workflow.yml.example) is included. Copy it to `.github/workflows/test.yml` to enable it, using credentials authorized to upload workflows. It is not enabled in this repository.
-
-## License
-
-This project uses the [MIT License](LICENSE). The developer's private data and photographs are not part of this distribution.
+For development, run `npm test` and `npm run check`. Tests use temporary databases and synthetic images. The project uses the [MIT License](LICENSE); the creator's private photos and data are not included.
