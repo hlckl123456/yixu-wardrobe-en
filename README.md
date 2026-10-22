@@ -53,11 +53,19 @@ Open [your local wardrobe](http://127.0.0.1:4184/#outfits). The server listens o
 
 The website is for browsing. To add your own clothes, use the maintenance commands rather than an upload or edit button:
 
-1. Photograph each item, prepare a cutout, and compare the result with the original. Review and record any AI reconstruction of hidden areas.
+1. Prepare a photo or a product image that matches an item you own, make a cutout, and compare the result with the original. Review and record any AI reconstruction of hidden areas.
 2. Prepare item details using the [maintenance guide](docs/MAINTENANCE.md#add-a-garment), then add them with `scripts/intake.mjs`.
 3. Make outfit candidates using items you own. Review the images and save the looks you want with `scripts/save-owned-outfit.mjs`.
 
 Saved looks appear in My outfits. Only ordinary looks with an image and currently active items appear in Outfit shuffle. You can also save a planned outfit with clearly marked pieces you do not own yet; those pieces do not become wardrobe inventory.
+
+## Start with product images instead of photographing everything
+
+Photographing every garment can make it hard to get started. If you have product images that match your clothes, you can use those instead.
+
+The planned workflow is to authorize an external AI tool to organize shopping emails or Taobao orders, collect images of the matching styles and colors, and add items after your review. Backfill older purchases in one batch, then use Automation to periodically prepare a review queue for new purchases.
+
+The repository currently accepts prepared images through its intake commands. Email and Taobao connections, and scheduled imports, are not built in yet. Collection requires a separately configured external tool with authorized access to the source. Review returns, cancellations, and duplicate purchases, and confirm you still own each item before adding it.
 
 ## Where your data stays
 
