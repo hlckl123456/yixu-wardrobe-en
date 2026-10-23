@@ -4,15 +4,17 @@
 
 I turned my own clothes into a small wardrobe website, used AI to explore combinations, and kept the outfits I would actually wear. Before going out, I pick a season and browse a few looks. Before buying more, I can look at what I already own.
 
-[Watch the intro](#see-it-in-13-seconds) · [Explore the features](#new-ways-to-wear-your-own-clothes) · [Get started](#get-started) · [中文版](https://github.com/hlckl123456/yixu-wardrobe-zh)
+[Watch the intro](#see-it-in-25-seconds) · [Explore the features](#new-ways-to-wear-your-own-clothes) · [Get started](#get-started) · [中文版](https://github.com/hlckl123456/yixu-wardrobe-zh)
 
-## See it in 13 seconds
+## See it in 25 seconds
 
-[![Yixu — animated preview; click for the full intro with music](docs/media/preview.gif)](https://github.com/hlckl123456/yixu-wardrobe-en/releases/download/demo-2026-10-22/yixu-intro-en.mp4)
+https://github.com/user-attachments/assets/acaa233e-069d-4985-b134-86cf7ee882c8
 
-**Click the preview for the 13.3-second video with music.** The animation above is silent. My clothing photos become a wardrobe, outfit ideas unfold, batches change, and the palette shifts. [Open or download the intro](https://github.com/hlckl123456/yixu-wardrobe-en/releases/download/demo-2026-10-22/yixu-intro-en.mp4). A [still from the ending](docs/media/video-poster.png) is also available. The [Chinese edition](https://github.com/hlckl123456/yixu-wardrobe-zh#先看完整演示) also has a full narrated walkthrough.
+**A 25-second tour, with music.** Start with my own clothing photos, open one sweater to see two saved looks, then shuffle outfits by season and mood. Find pieces that haven’t appeared in a saved outfit, see the wardrobe overview, and change the page palette.
 
-> These screenshots show my own wardrobe: 105 active items and 166 saved looks at the time of capture. The garments are clothes I own; the people wearing them are AI outfit illustrations, not photographs of me trying them on. The intro recreates the workflow with waiting omitted. A fresh download starts empty; presentation screenshots and videos are separate from the wardrobe data.
+[Download the full-quality video](https://github.com/hlckl123456/yixu-wardrobe-en/releases/download/demo-2026-10-22/yixu-showcase-en-25s.mp4) · [Watch the original 13-second teaser](https://github.com/hlckl123456/yixu-wardrobe-en/releases/download/demo-2026-10-22/yixu-intro-en.mp4) · [Full Chinese walkthrough](https://github.com/hlckl123456/yixu-wardrobe-zh#先看完整演示)
+
+> These screenshots show my own wardrobe: 105 active items and 166 saved looks at the time of capture. The garments are clothes I own; the people wearing them are AI outfit illustrations, not photographs of me trying them on. The opening recreates the workflow with waiting omitted; the feature sequence uses edited captures of the English website. A fresh download starts empty; presentation screenshots and videos are separate from the wardrobe data.
 
 ## New ways to wear your own clothes
 
